@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6438b4</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorSecondary">#222631</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="colorTransparent">#7d9e9898</color>
+    <color name="colorOverlayVideo">#379e9898</color>
+    <color name="tabUnselectedIconColor">#b7b7b7</color>
+    <color name="tabSelectedIconColor">#FFF</color>
+
+    <array name="color_app_picker">
+
+        <item>#6438b4</item>
+        <item>#FF5252</item>
+        <item>#FF1744</item>
+        <item>#D50000</item>
+
+        <item>#FF80AB</item>
+        <item>#FF4081</item>
+        <item>#F50057</item>
+        <item>#C51162</item>
+
+        <item>#E040FB</item>
+        <item>#D500F9</item>
+        <item>#AA00FF</item>
+
+        <item>#B388FF</item>
+        <item>#7C4DFF</item>
+        <item>#651FFF</item>
+        <item>#6200EA</item>
+
+        <item>#536DFE</item>
+        <item>#3D5AFE</item>
+        <item>#304FFE</item>
+
+        <item>#448AFF</item>
+        <item>#2979FF</item>
+        <item>#2962FF</item>
+
+        <item>#00B0FF</item>
+        <item>#0091EA</item>
+
+        <item>#00C853</item>
+
+
+        <item>#FFAB00</item>
+
+        <item>#FFAB40</item>
+        <item>#FF9100</item>
+        <item>#FF6D00</item>
+
+        <item>#FF9E80</item>
+        <item>#FF6E40</item>
+        <item>#FF3D00</item>
+        <item>#DD2C00</item>
+
+        <item>#607D8B</item>
+        <item>#263238</item>
+        <item>#000000</item>
+    </array>
+</resources>
+
+

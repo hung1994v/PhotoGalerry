@@ -1,0 +1,24 @@
+<resources>
+    <!-- Default screen margins for smallest width = 320dp -->
+
+    <!--standard dimen-->
+    <dimen name="xx_small">5dp</dimen>
+    <dimen name="small">10dp</dimen>
+    <dimen name="x_large">22dp</dimen>
+
+    <dimen name="huge">56dp</dimen>
+
+    <dimen name="font_size_small">12sp</dimen>
+    <dimen name="font_size_standard">14sp</dimen>
+    <dimen name="font_size_large">16sp</dimen>
+
+    <dimen name="icon_splash_with">60sp</dimen>
+
+
+    <dimen name="icon_size_small">26dp</dimen>
+    <dimen name="icon_size_standard">38dp</dimen>
+    <dimen name="icon_size_xstand">46dp</dimen>
+    <dimen name="icon_size_large">64dp</dimen>
+    <dimen name="icon_size_huge">90dp</dimen>
+
+</resources>

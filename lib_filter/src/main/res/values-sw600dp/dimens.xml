@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><!--for tablet 7-inches-->
+<resources>
+
+    <!-- Default screen margins for smallest width = 320dp -->
+
+    <!--standard dimen-->
+    <dimen name="xx_small">9.5dp</dimen>
+    <dimen name="small">19dp</dimen>
+    <dimen name="x_large">41.5dp</dimen>
+
+    <dimen name="huge">105dp</dimen>
+
+
+    <dimen name="font_size_small">22.5sp</dimen>
+    <dimen name="font_size_standard">26sp</dimen>
+    <dimen name="font_size_large">30sp</dimen>
+
+    <dimen name="icon_size_small">49dp</dimen>
+    <dimen name="icon_size_standard">71dp</dimen>
+    <dimen name="icon_size_xstand">86.5dp</dimen>
+    <dimen name="icon_size_large">120dp</dimen>
+    <dimen name="icon_size_huge">168dp</dimen>
+
+
+    <dimen name="icon_splash_with">112.6sp</dimen>
+
+</resources>

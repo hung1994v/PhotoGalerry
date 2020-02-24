@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/share_btn"
+        android:icon="@drawable/ic_share"
+        android:title="add"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/delete_btn"
+        android:icon="@drawable/ic_delete"
+        android:title="add"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/more_btn"
+        android:icon="@drawable/ic_more"
+        android:title="more"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/selectAll_btn"
+                android:title="@string/select_all" />
+            <item
+                android:id="@+id/unSelectAll_btn"
+                android:title="@string/unselect_all" />
+        </menu>
+    </item>
+</menu>

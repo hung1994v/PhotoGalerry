@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingRight="@dimen/margin_xxsmall_size"
+    android:paddingBottom="@dimen/margin_xxsmall_size"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/iv_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:visibility="visible"
+        android:id="@+id/view_info_video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingRight="@dimen/margin_small_size"
+        android:paddingBottom="@dimen/margin_small_size"
+        android:background="@color/colorOverlayVideo">
+
+        <ImageView
+            android:layout_margin="@dimen/_5sdp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:id="@+id/iv_play_video"
+            android:layout_width="@dimen/font_size_large"
+            android:layout_height="@dimen/font_size_large"
+            android:src="@drawable/ic_play_video"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"/>
+
+        <TextView
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/tv_time_video"
+            style="@style/GeneralTextView"
+            android:textSize="@dimen/font_size_small"
+            android:text="04:15"
+            android:layout_toLeftOf="@+id/iv_play_video"
+            android:layout_marginRight="@dimen/margin_small_size"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <FrameLayout
+        android:visibility="visible"
+        android:id="@+id/view_tick"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorTransparent">
+
+        <ImageView
+            android:layout_margin="@dimen/_5sdp"
+            android:id="@+id/iv_ticked"
+            android:layout_width="@dimen/_20sdp"
+            android:layout_height="@dimen/_20sdp"
+            android:src="@drawable/ic_check"
+            />
+    </FrameLayout>
+</FrameLayout>

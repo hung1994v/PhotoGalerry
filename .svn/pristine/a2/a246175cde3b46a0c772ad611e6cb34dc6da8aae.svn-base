@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/width_color_picker"
+    android:layout_gravity="center_horizontal"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:text="@string/color_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/font_size_large"
+        android:layout_marginTop="@dimen/margin_normal_size"
+        android:layout_marginBottom="@dimen/margin_normal_size"
+        android:layout_marginLeft="@dimen/margin_normal_size"/>
+
+    <include
+        layout="@layout/fragment_recycerview"/>
+</LinearLayout>

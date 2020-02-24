@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/img_splash"
+        android:layout_width="@dimen/icon_size_xstand"
+        android:layout_height="@dimen/icon_size_large"
+        android:layout_margin="@dimen/margin_xxsmall_size" />
+
+    <RelativeLayout
+        android:layout_width="@dimen/icon_size_xstand"
+        android:layout_height="@dimen/icon_size_large"
+        android:layout_margin="@dimen/margin_xxsmall_size">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/img_splash_press"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/container_stype"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/img_stype"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/margin_xsmall_size" />
+
+            <ImageView
+                android:id="@+id/img_change"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/margin_xsmall_size"
+                android:src="@drawable/img_splash_change" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,33 @@
+<resources>
+    <dimen name="font_size_xsmall">12sp</dimen>
+    <dimen name="font_size_small">14sp</dimen>
+    <dimen name="font_size_normal">16sp</dimen>
+    <dimen name="font_size_standard">18sp</dimen>
+    <dimen name="font_size_large">20sp</dimen>
+    <dimen name="font_size_xlarge">22sp</dimen>
+    <dimen name="font_size_xxlarge">24sp</dimen>
+    <dimen name="font_size_huge">34sp</dimen>
+    <dimen name="font_size_xhuge">45sp</dimen>
+    <dimen name="font_size_xxhuge">56sp</dimen>
+    <dimen name="font_size_xxxhuge">62sp</dimen>
+
+    <dimen name="icon_size_xsmall">22dp</dimen>
+    <dimen name="icon_size_small">26dp</dimen>
+    <dimen name="icon_size_standard">38dp</dimen>
+    <dimen name="icon_size_xstand">46dp</dimen>
+    <dimen name="icon_size_large">64dp</dimen>
+    <dimen name="icon_size_huge">90dp</dimen>
+
+    <dimen name="margin_huge_size">35dp</dimen>
+    <dimen name="margin_xlarge_size">24dp</dimen>
+    <dimen name="margin_large_size">20dp</dimen>
+    <dimen name="margin_normal_size">12dp</dimen>
+    <dimen name="margin_small_size">8dp</dimen>
+    <dimen name="margin_xsmall_size">4dp</dimen>
+    <dimen name="margin_xxsmall_size">2dp</dimen>
+
+
+    <dimen name="height_content_tablayout">180dp</dimen>
+
+
+</resources>

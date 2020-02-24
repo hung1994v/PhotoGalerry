@@ -1,0 +1,57 @@
+package com.photo.gallery.utils;
+
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+
+import com.photo.gallery.R;
+
+/**
+ * Created by Hoavt on 11/29/2017.
+ */
+
+public class FragmentUtils {
+
+    private static final String TAG = FragmentUtils.class.getSimpleName();
+
+    public static void addFragment(FragmentManager fm, Fragment fragment) {
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.add(R.id.layout_container, fragment);
+        ft.commit();
+    }
+
+    public static void showFragment(FragmentManager fm, Fragment fragment) {
+        fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .show(fragment)
+                .commit();
+    }
+
+    public static void hideFragment(FragmentManager fm, Fragment fragment) {
+        fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(fragment)
+                .commit();
+    }
+
+
+
+    public static int size(FragmentManager fm) {
+        return fm.getBackStackEntryCount();
+    }
+
+    public static void clearBackstack(FragmentManager fm) {
+        fm.popBackStack(R.id.layout_container, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
+
+    public Fragment getCurrentFragment(FragmentManager fm) {
+        return fm.findFragmentById(R.id.layout_container);
+    }
+
+    public static void listFragments(FragmentManager fm) {
+        Flog.d(TAG, "list Fragments size="+fm.getBackStackEntryCount());
+        for(int entry = 0; entry < fm.getBackStackEntryCount(); entry++){
+            Flog.d(TAG, "Found fragment: " + fm.getBackStackEntryAt(entry).getId());
+        }
+    }
+}

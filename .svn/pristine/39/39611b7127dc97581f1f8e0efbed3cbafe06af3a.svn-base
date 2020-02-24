@@ -1,0 +1,2363 @@
+package com.photo.gallery.activities;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.Html;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.ads.AdSize;
+import com.photo.gallery.BuildConfig;
+import com.photo.gallery.R;
+import com.photo.gallery.callback.OnDialogEventListener;
+import com.photo.gallery.callback.OnFileDialogEventListener;
+import com.photo.gallery.fragments.AlbumsFragment;
+import com.photo.gallery.fragments.BaseFragment;
+import com.photo.gallery.fragments.FavouriteFragment;
+import com.photo.gallery.fragments.FilesAlbumFragment;
+import com.photo.gallery.fragments.PhotoFragment;
+import com.photo.gallery.fragments.PhotoViewerFragment;
+import com.photo.gallery.fragments.SearchFragment;
+import com.photo.gallery.fragments.SelectAlbumFragment;
+import com.photo.gallery.fragments.VideoFragment;
+import com.photo.gallery.fragments.VideoViewerFragment;
+import com.photo.gallery.models.AlbumItem;
+import com.photo.gallery.models.FileItem;
+import com.photo.gallery.taskes.GroupFilesTask;
+import com.photo.gallery.ui.ColorPickerDialogFragment;
+import com.photo.gallery.ui.DisableSwipViewPager;
+import com.photo.gallery.utils.ConstValue;
+import com.photo.gallery.utils.DateUtils;
+import com.photo.gallery.utils.DbUtils;
+import com.photo.gallery.utils.FileUtil;
+import com.photo.gallery.utils.Flog;
+import com.photo.gallery.utils.FragmentUtils;
+import com.photo.gallery.utils.GalleryUtil;
+import com.photo.gallery.utils.KeyboardUtil;
+import com.photo.gallery.utils.SharedPrefUtil;
+import com.photo.gallery.utils.Utils;
+import com.wave.lib_crs.AdmobBannerHelper;
+import com.wave.lib_crs.AdmobFullHelper;
+import com.wave.lib_crs.CrsDialogFragment;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import hotchemi.android.rate.AppRate;
+import hotchemi.android.rate.OnClickButtonListener;
+
+/**
+ * Created by Hoavt on 3/15/2018.
+ */
+
+public class ContentActivity extends AppCompatActivity implements GroupFilesTask.OnGroupFilesListener, PhotoFragment.OnPhotoListener, VideoFragment.OnVideoListener, AlbumsFragment.OnAlbumsListener, View.OnClickListener, SearchFragment.OnSearchListener, FilesAlbumFragment.OnFileAlbumsListener, PhotoViewerFragment.OnPhotoViewerListener, VideoViewerFragment.OnVideoViewerListener, SelectAlbumFragment.OnSelectAlbumListener, ColorPickerDialogFragment.OnColorPickerDialogListener, FavouriteFragment.OnFavouriteListener {
+
+    public static final int FLAG_MODE_NONE = 0;
+    public static final int FLAG_MODE_ENABLE = 1;
+    public static final int FLAG_MODE_DISABLE = 2;
+    private static final java.lang.String TAG = ContentActivity.class.getSimpleName();
+    private static final boolean FLAG_REFRESH_OPTIMIZE = true;
+    public static boolean FLAG_RELOAD_GALLERY = false;
+    public static int FLAG_OPEN_WITH_ACTION = FLAG_MODE_NONE;
+    private final boolean FLAG_REFRESH_ENABLE = false;
+    private final int TOTAL_THREADS = 6;
+    private ArrayList<FileItem> listAllFiles = null, listAllImgs = null, listAllVideos = null;
+    private HashMap<String, ArrayList<FileItem>> mapAllFolders = null;
+    private Map<String, ArrayList<FileItem>> mapAllImgSections = null, mapAllVideoSections = null, mapAllFileSetions = null;
+    private ProgressDialog progressDialog = null;
+    private BaseFragment photoFragment = null, videoFragment = null, albumsFragment = null, favouriteFragment = null;
+    private DisableSwipViewPager viewPager;
+    private TabLayout tabLayout;
+    private DrawerLayout drawerLayout;
+    private ImageView btnNav, btnSearch, btnGifts;
+    private View btnOpenTabPhotos, btnOpenTabVideos, btnOpenTabAlbums, btnSecurity, btnTheme,
+            btnRateApp, btnShareApp, btnFeedback, btnVersion;
+    private TextView tvNumOfPhotos, tvNumOfVideos, tvNumOfAlbums, tvVersion, tvNumOfMulti;
+    private String mNameVersion = "";
+    private View mContainer = null, btnBackMulti, btnDelMulti, btnMoreMulti;
+    private BaseFragment searchFrag = null, filesAlbumFrag = null, photoViewerFrag = null,
+            videoViewerFrag = null, selectAlbumFrag = null;
+    private FragmentManager fm = null;
+    private int curFragID = -1;
+    private float heightTabLayout = 0;
+    private ViewGroup multiSelectToolbar, myToolbar;
+    private int heightLargeViewPager = 0, heightNormalViewPager = 0;
+    private AlertDialog dialogPopupMulFile = null, dialogPopupFile = null;
+    private long mLastClickTime = 0;
+    private AdmobFullHelper admobFullHelper = null;
+    private int parentCurFragID = -1;
+    private AlertDialog alertDialog = null;
+    private Switch switchDefaultApp = null;
+    private int cnt = 0;
+    private boolean isMultiSelectMode = false;
+    private ViewGroup admobBanner = null;
+    private int mHeightAdmobBanner = 0;
+    private View progressContainer = null;
+
+    public static void buildAppRate(final Activity activity, final OnClickButtonListener listener) {
+        AppRate.with(activity)
+                .setInstallDays(0) // default 10, 0 means install day.
+                .setLaunchTimes(1) // default 10
+                .setRemindInterval(99) // default 1
+                .setDebug(true) // default false
+                .setOnClickButtonListener(listener)
+                .monitor();
+    }
+
+    public static Map<Integer, FileItem> sort(HashMap<Integer, FileItem> input) {
+
+        Map<Integer, FileItem> map = new TreeMap<>(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer idx1, Integer idx2) {
+                int cmp = 0;
+                if (idx1 < idx2) {
+                    cmp = 1;
+                } else if (idx1 > idx2) {
+                    cmp = -1;
+                }
+                return cmp;
+            }
+        });
+        map.putAll(input);
+
+        return map;
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_content);
+
+        CrsDialogFragment.loadData(getApplicationContext());
+
+        applyColor();
+
+        initViews();
+
+        getData();
+
+        if (fm == null) {
+            addFrags();
+            setValues();
+        }
+
+        loadAllFolders();
+    }
+
+    private void applyColor() {
+        int defaultPrimary = ContextCompat.getColor(this, R.color.colorPrimary);
+        int colorPrimary = SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, defaultPrimary);
+        int colorPrimaryDark = Utils.getColorDarker(colorPrimary);
+
+        ViewGroup layoutNav1 = (ViewGroup) findViewById(R.id.nav_bg_1);
+        ViewGroup layoutNav2 = (ViewGroup) findViewById(R.id.nav_bg_2);
+        ViewGroup myToolbar = (ViewGroup) findViewById(R.id.my_toolbar);
+        ViewGroup multiToolbar = (ViewGroup) findViewById(R.id.multi_toolbar);
+        ViewGroup tabs = (ViewGroup) findViewById(R.id.tabs);
+
+        Utils.setColorViews(colorPrimary, layoutNav1, layoutNav2, myToolbar, multiToolbar, tabs);
+
+        boolean isDarkTheme = Utils.isColorDark(colorPrimary);
+        Utils.setConstractStatusBar(this, isDarkTheme);
+        Utils.setColorStatusBar(this, colorPrimaryDark);
+    }
+
+    private void loadAllFolders() {
+        if (listAllFiles == null) {
+            toastLoadGalleryFailed();
+            return;
+        }
+
+        showDialog();
+        GroupFilesTask groupFoldersTask = new GroupFilesTask(this).setListener(this);
+        groupFoldersTask.execute(listAllFiles);
+    }
+
+    private void toastLoadGalleryFailed() {
+        Toast.makeText(this, getString(R.string.load_gallery_failed), Toast.LENGTH_SHORT).show();
+    }
+
+    private void initViews() {
+        initAdmob();
+        initDialog();
+
+        viewPager = (DisableSwipViewPager) findViewById(R.id.viewpager);
+        tabLayout = (TabLayout) findViewById(R.id.tabs);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer);
+
+        btnNav = (ImageView) findViewById(R.id.btn_nav);
+        btnSearch = (ImageView) findViewById(R.id.btn_search);
+        btnGifts = (ImageView) findViewById(R.id.btn_gift);
+        btnOpenTabPhotos = findViewById(R.id.btn_open_tab_photos);
+        btnOpenTabVideos = findViewById(R.id.btn_open_tab_videos);
+        btnOpenTabAlbums = findViewById(R.id.btn_open_tab_albums);
+        btnSecurity = findViewById(R.id.btn_security);
+        btnTheme = findViewById(R.id.btn_theme);
+        btnFeedback = findViewById(R.id.btn_feedback);
+        btnRateApp = findViewById(R.id.btn_rate_app);
+        btnShareApp = findViewById(R.id.btn_share_app);
+        btnVersion = findViewById(R.id.btn_version);
+
+        tvNumOfPhotos = (TextView) findViewById(R.id.tv_value_photos);
+        tvNumOfVideos = (TextView) findViewById(R.id.tv_value_videos);
+        tvNumOfAlbums = (TextView) findViewById(R.id.tv_value_albums);
+        tvVersion = (TextView) findViewById(R.id.tv_version);
+
+        mContainer = findViewById(R.id.layout_container);
+        myToolbar = (ViewGroup) findViewById(R.id.my_toolbar);
+        multiSelectToolbar = (ViewGroup) findViewById(R.id.multi_toolbar);
+
+        btnBackMulti = findViewById(R.id.btn_back_multiselected);
+        btnDelMulti = findViewById(R.id.btn_delete_multiselected);
+        btnMoreMulti = findViewById(R.id.btn_more_multiselected);
+        tvNumOfMulti = (TextView) findViewById(R.id.tv_num_of_selected);
+
+        switchDefaultApp = (Switch) findViewById(R.id.switch_set_default);
+    }
+
+    public void addFrags() {
+        fm = getSupportFragmentManager();
+
+        searchFrag = new SearchFragment().setListener(this);
+        filesAlbumFrag = new FilesAlbumFragment().setListener(this);
+        photoViewerFrag = new PhotoViewerFragment().setListener(this);
+        videoViewerFrag = new VideoViewerFragment().setListener(this);
+        selectAlbumFrag = new SelectAlbumFragment().setListener(this);
+
+        if (FragmentUtils.size(fm) > 0) {
+            FragmentUtils.clearBackstack(fm);
+        }
+
+        FragmentUtils.addFragment(fm, searchFrag);
+        FragmentUtils.addFragment(fm, filesAlbumFrag);
+        FragmentUtils.addFragment(fm, photoViewerFrag);
+        FragmentUtils.addFragment(fm, videoViewerFrag);
+        FragmentUtils.addFragment(fm, selectAlbumFrag);
+
+        showOptFrag(-1);
+    }
+
+    private void showOptFrag(int fragID) {
+        if (curFragID == -1) {
+            hideAllFrags();
+        } else {
+            showFragAt(curFragID, false);
+        }
+
+        showFragAt(fragID, true);
+        curFragID = fragID;
+    }
+
+    private void showFragAt(int fragID, boolean visibility) {
+        long timestamp = System.currentTimeMillis();
+        if (timestamp % 3 == 0)
+            showFullAds();
+
+
+        switch (fragID) {
+            case BaseFragment.FRAGMENT_SEARCH:
+                showFragment(searchFrag, visibility);
+                break;
+            case BaseFragment.FRAGMENT_FILES_ALBUM:
+                showFragment(filesAlbumFrag, visibility);
+                break;
+            case BaseFragment.FRAGMENT_PHOTO_VIEWER:
+                showFragment(photoViewerFrag, visibility);
+                break;
+            case BaseFragment.FRAGMENT_VIDEO_VIEWER:
+                showFragment(videoViewerFrag, visibility);
+                break;
+            case BaseFragment.FRAGMENT_SELECT_ALBUM:
+                showFragment(selectAlbumFrag, visibility);
+                break;
+        }
+    }
+
+    private void showFragment(Fragment fragment, boolean visibility) {
+        if (visibility) {
+            FragmentUtils.showFragment(fm, fragment);
+        } else {
+            FragmentUtils.hideFragment(fm, fragment);
+        }
+        showContainer(visibility);
+    }
+
+    private void hideAllFrags() {
+        FragmentUtils.hideFragment(fm, searchFrag);
+        FragmentUtils.hideFragment(fm, filesAlbumFrag);
+        FragmentUtils.hideFragment(fm, photoViewerFrag);
+        FragmentUtils.hideFragment(fm, videoViewerFrag);
+        FragmentUtils.hideFragment(fm, selectAlbumFrag);
+        showContainer(false);
+    }
+
+    public void showContainer(boolean shown) {
+        mContainer.setVisibility(shown ? View.VISIBLE : View.GONE);
+    }
+
+    private void closeNavigationLayout() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START))
+            drawerLayout.closeDrawer(GravityCompat.START);
+//        drawerLayout.closeDrawers();
+    }
+
+    public void openNavigationBar() {
+        if (drawerLayout != null && !drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.openDrawer(GravityCompat.START);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            switch (curFragID) {
+                case BaseFragment.FRAGMENT_SEARCH:
+                    onBackSearchFragment();
+                    break;
+                case BaseFragment.FRAGMENT_FILES_ALBUM:
+                    if (((FilesAlbumFragment) filesAlbumFrag).isLongClickedEvent()) {
+                        ((FilesAlbumFragment) filesAlbumFrag).handleBackMultiSelected();
+                    } else {
+                        onBackFileAlbumsFragment();
+                    }
+                    break;
+                case BaseFragment.FRAGMENT_PHOTO_VIEWER:
+                    onBackPhotoViewerFragment();
+                    break;
+                case BaseFragment.FRAGMENT_VIDEO_VIEWER:
+                    onBackVideoViewerFragment();
+                    break;
+                case BaseFragment.FRAGMENT_SELECT_ALBUM:
+                    onBackSelectAlbumFragment();
+                    break;
+                default:
+                    if (isMultiSelectMode) {
+                        handleBackMultiSelected();
+                    } else {
+//                        super.onBackPressed();
+                        exitApp();
+                    }
+            }
+        }
+    }
+
+    private void exitApp() {
+        try {
+            showAppRate();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            finishAffinity();
+        }
+    }
+
+    private void showAppRate() {
+        if (AppRate.showRateDialogIfMeetsConditions(this)) {
+            //do nothing
+        } else {
+//            CrsDialogFragment crsDialogFragment = new CrsDialogFragment().setOnYesListener(new CrsDialogFragment.OnYesListener() {
+//                @Override
+//                public void onYesClickListener() {
+//                    finishAffinity();
+//                }
+//            });
+//            crsDialogFragment.setCancelable(false);
+//            crsDialogFragment.show(getSupportFragmentManager(), "CrsDialogFragment");
+        }
+    }
+
+    private void setValues() {
+//        viewPager.setPagingEnabled(false);
+
+        viewPager.setOffscreenPageLimit(4);
+        setupViewPager(viewPager);
+
+        tabLayout.setupWithViewPager(viewPager);
+        setupTabIcons();
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                setTabSelected(tab, true);
+
+                int curIdx = tab.getPosition();
+                if (curIdx == 3) { // favourite tab
+                    ((FavouriteFragment) favouriteFragment).refreshList();
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                setTabSelected(tab, false);
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+        btnNav.setOnClickListener(this);
+        btnSearch.setOnClickListener(this);
+        btnGifts.setOnClickListener(this);
+        btnOpenTabPhotos.setOnClickListener(this);
+        btnOpenTabVideos.setOnClickListener(this);
+        btnOpenTabAlbums.setOnClickListener(this);
+        btnSecurity.setOnClickListener(this);
+        btnTheme.setOnClickListener(this);
+        btnFeedback.setOnClickListener(this);
+        btnRateApp.setOnClickListener(this);
+        btnShareApp.setOnClickListener(this);
+        btnVersion.setOnClickListener(this);
+        btnBackMulti.setOnClickListener(this);
+        btnDelMulti.setOnClickListener(this);
+        btnMoreMulti.setOnClickListener(this);
+
+
+        boolean isSetAppDefault = SharedPrefUtil.getInstance().getBoolean(ConstValue.EXTRA_SET_APP_DEFAULT, false);
+        switchDefaultApp.setChecked(isSetAppDefault);
+        switchDefaultApp.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean fromUser) {
+                boolean isChecked = switchDefaultApp.isChecked();
+                SharedPrefUtil.getInstance().putBoolean(ConstValue.EXTRA_SET_APP_DEFAULT, isChecked);
+
+                Flog.d(TAG, "on checked=" + isChecked);
+                Utils.resetPreferredLauncherAndOpenChooser(ContentActivity.this, isChecked);
+                if (isChecked) {
+
+                } else {
+
+
+                }
+            }
+        });
+
+        mNameVersion = BuildConfig.VERSION_NAME;
+        tvVersion.setText(mNameVersion);
+
+//        getHeightViews();
+    }
+
+    private void setTextNumOfSelected(int numOfSelected) {
+        if (numOfSelected <= 0) {
+            tvNumOfMulti.setText(getString(R.string.select_media));
+        } else {
+            tvNumOfMulti.setText(numOfSelected + " " + getString(R.string.selected));
+        }
+    }
+
+    private void getHeightViews() {
+        float heightTabLayout = Utils.getActionBarHeight(this);
+        if (heightTabLayout == 0) {
+            heightTabLayout = tabLayout.getHeight();
+            if (heightTabLayout == 0) {
+                heightTabLayout = Utils.convertDipToPixels(this, 48);
+            }
+        }
+        this.heightTabLayout = heightTabLayout;
+
+        int heightStatusbar = Utils.getStatusBarHeight(this);
+        heightLargeViewPager = (int) (Utils.getScreenSize(this)[1]
+                - getResources().getDimension(R.dimen.height_toolbar))
+                - heightStatusbar
+                - mHeightAdmobBanner;
+        heightNormalViewPager = (int) (heightLargeViewPager - heightTabLayout);
+        setHeightViewPager(heightNormalViewPager);
+    }
+
+    private void setTabSelected(TabLayout.Tab tab, boolean isSelected) {
+        try {
+            ((TextView) tab.getCustomView().findViewById(R.id.nav_label)).setTextColor(ContextCompat.getColor(this,
+                    isSelected ? R.color.tabSelectedIconColor : R.color.tabUnselectedIconColor));
+
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+        }
+    }
+
+    private void setupTabIcons() {
+
+        int[] navLabels = {
+                R.string.photo,
+                R.string.video,
+                R.string.albums,
+                R.string.favourite
+        };
+
+        for (int i = 0; i < navLabels.length; i++) {
+            LinearLayout tab = (LinearLayout) LayoutInflater.from(this).inflate(R.layout.custom_tab, null);
+            TextView tab_label = (TextView) tab.findViewById(R.id.nav_label);
+
+            tab_label.setText(getResources().getString(navLabels[i]));
+            tab_label.setTextColor(ContextCompat.getColor(this, (i == 0) ? R.color.tabSelectedIconColor : R.color.tabUnselectedIconColor));
+
+            tabLayout.getTabAt(i).setCustomView(tab);
+        }
+    }
+
+    private void setupViewPager(ViewPager viewPager) {
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        photoFragment = new PhotoFragment().setListener(this);
+        videoFragment = new VideoFragment().setListener(this);
+        albumsFragment = new AlbumsFragment().setListener(this);
+        favouriteFragment = new FavouriteFragment().setListener(this);
+
+        adapter.addFragment(photoFragment, getString(R.string.photo));
+        adapter.addFragment(videoFragment, getString(R.string.video));
+        adapter.addFragment(albumsFragment, getString(R.string.albums));
+        adapter.addFragment(favouriteFragment, getString(R.string.favourite));
+        viewPager.setAdapter(adapter);
+    }
+
+    private void initDialog() {
+
+        progressContainer = findViewById(R.id.progress_container);
+        progressContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // DO NOTHING.
+            }
+        });
+
+        initPopupMulFileDialog();
+
+        if (true) {
+            return;
+        }
+
+        progressDialog = new ProgressDialog(this);
+
+    }
+
+    private void showDialog() {
+
+        if (progressContainer!=null) {
+            progressContainer.setVisibility(View.VISIBLE);
+        }
+        if (true) {
+            return;
+        }
+        if (progressDialog != null) {
+            progressDialog.show();
+        }
+    }
+
+    private void hideDialog() {
+
+        if (progressContainer!=null) {
+            progressContainer.setVisibility(View.GONE);
+        }
+        if (true) {
+            return;
+        }
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    private void getData() {
+        listAllFiles = getIntent().getParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES);
+        Flog.d(TAG, "listAllFiles size=" + (listAllFiles == null ? -1 : listAllFiles.size()));
+    }
+
+    public void refreshFileGalleryDeleted(FileItem... items) {
+        Flog.d(TAG, "refreshFileGalleryDeleted=" + items);
+        if (items == null || items.length <= 0) {
+            return;
+        }
+        showDialog();
+
+        HashMap<Integer, FileItem> listItemOrderAll = new HashMap<>();
+        HashMap<Integer, FileItem> listItemOrderImg = new HashMap<>();
+        HashMap<Integer, FileItem> listItemOrderVideo = new HashMap<>();
+        for (int i = 0; i < items.length; i++) {
+            FileItem item = items[i];
+            Flog.d(TAG, "refresh item " + i + ": " + item.path);
+
+            int posInList = -1;
+            if (item.isImage && this.listAllImgs.contains(item)) {
+                posInList = this.listAllImgs.indexOf(item);
+                listItemOrderImg.put(posInList, item);
+            } else if (!item.isImage && this.listAllVideos.contains(item)) {
+                posInList = this.listAllVideos.indexOf(item);
+                listItemOrderVideo.put(posInList, item);
+            }
+
+            if (this.listAllFiles.contains(item)) {
+                posInList = this.listAllFiles.indexOf(item);
+                listItemOrderAll.put(posInList, item);
+            }
+            Flog.d(TAG, "list posInList " + posInList + ": " + item.path);
+        }
+
+        Map<Integer, FileItem> listSortedAll = null;
+        if (listItemOrderAll.size() > 0) {
+            listSortedAll = sort(listItemOrderAll);
+        }
+        Map<Integer, FileItem> listSortedImg = null;
+        if (listItemOrderImg.size() > 0) {
+            listSortedImg = sort(listItemOrderImg);
+        }
+        Map<Integer, FileItem> listSortedVideo = null;
+        if (listItemOrderVideo.size() > 0) {
+            listSortedVideo = sort(listItemOrderVideo);
+        }
+
+        if (listSortedAll != null) {
+            ArrayList<FileItem> arrSortedAll = new ArrayList<>();
+            for (Map.Entry item : listSortedAll.entrySet()) {
+                int idx = (int) item.getKey();
+                FileItem obj = (FileItem) item.getValue();
+                Flog.d(TAG, "list posInList23 " + idx + ": " + obj.path);
+                arrSortedAll.add(obj);
+            }
+
+            for (int i = arrSortedAll.size() - 1; i >= 0; i--) {
+                FileItem item = arrSortedAll.get(i);
+//            Flog.d(TAG, "delete at "+listSorted1.get(i)+": "+item.path);
+                this.listAllFiles.remove(item);
+            }
+
+            this.mapAllFileSetions = GalleryUtil.groupListSectionByDate(listAllFiles);
+            ((SearchFragment) this.searchFrag).updateUI(listAllFiles, mapAllFileSetions);
+
+            mapAllFolders = GalleryUtil.groupListAllAlbums(listAllFiles);
+            tvNumOfAlbums.setText(String.valueOf(mapAllFolders.size()));
+
+            ((AlbumsFragment) albumsFragment).updateUI(mapAllFolders);
+            ((SelectAlbumFragment) selectAlbumFrag).updateUI(mapAllFolders);
+
+
+            List<String> indexes = new ArrayList<String>(mapAllFolders.keySet()); // <== Set to List
+            int position = ((AlbumsFragment) albumsFragment).getPosition();
+            try {
+                String key = indexes.get(position);
+                ArrayList<FileItem> listFilesInCurDir = mapAllFolders.get(key);
+                ((FilesAlbumFragment) filesAlbumFrag).updateUI(listFilesInCurDir);
+            } catch (Exception npe) {
+                npe.printStackTrace();
+            }
+        }
+
+        if (listSortedImg != null) {
+            ArrayList<FileItem> arrSortedImg = new ArrayList<>();
+            for (Map.Entry item : listSortedImg.entrySet()) {
+                int idx = (int) item.getKey();
+                FileItem obj = (FileItem) item.getValue();
+//                Flog.d(TAG, "list posInList23 " + idx + ": " + obj.path);
+                arrSortedImg.add(obj);
+            }
+
+            for (int i = arrSortedImg.size() - 1; i >= 0; i--) {
+                FileItem item = arrSortedImg.get(i);
+//            Flog.d(TAG, "delete at "+listSorted1.get(i)+": "+item.path);
+                this.listAllImgs.remove(item);
+            }
+
+            this.mapAllImgSections = GalleryUtil.groupListSectionByDate(this.listAllImgs);
+            ((PhotoFragment) photoFragment).updateUI(listAllImgs, mapAllImgSections);
+            tvNumOfPhotos.setText(String.valueOf(listAllImgs.size()));
+        }
+
+        if (listSortedVideo != null) {
+            ArrayList<FileItem> arrSortedVideo = new ArrayList<>();
+            for (Map.Entry item : listSortedVideo.entrySet()) {
+                int idx = (int) item.getKey();
+                FileItem obj = (FileItem) item.getValue();
+//                Flog.d(TAG, "list posInList23 " + idx + ": " + obj.path);
+                arrSortedVideo.add(obj);
+            }
+
+            for (int i = arrSortedVideo.size() - 1; i >= 0; i--) {
+                FileItem item = arrSortedVideo.get(i);
+//            Flog.d(TAG, "delete at "+listSorted1.get(i)+": "+item.path);
+                this.listAllVideos.remove(item);
+            }
+
+            this.mapAllVideoSections = GalleryUtil.groupListSectionByDate(this.listAllVideos);
+            ((VideoFragment) videoFragment).updateUI(listAllVideos, mapAllVideoSections);
+            tvNumOfVideos.setText(String.valueOf(listAllVideos.size()));
+        }
+
+        Flog.d(TAG, "size after deleted: " + this.listAllImgs.size());
+
+        ((FavouriteFragment) favouriteFragment).refreshList();
+
+        hideDialog();
+    }
+
+    public void refreshFileGalleryCopied(FileItem... items) {
+        Flog.d(TAG, "refreshFileGalleryCopied=" + items);
+        if (items == null || items.length <= 0) {
+            return;
+        }
+        showDialog();
+
+        ArrayList<FileItem> arrAll = new ArrayList<>();
+        ArrayList<FileItem> arrImg = new ArrayList<>();
+        ArrayList<FileItem> arrVideo = new ArrayList<>();
+        for (int i = 0; i < items.length; i++) {
+            FileItem item = items[i];
+            if (item.isImage) {
+                arrImg.add(item);
+            } else {
+                arrVideo.add(item);
+            }
+
+            arrAll.add(item);
+        }
+
+        if (arrAll.size() > 0) {
+
+            for (int i = 0; i < arrAll.size(); i++) {
+                FileItem item = arrAll.get(i);
+                //            Flog.d(TAG, "delete at "+listSorted1.get(i)+": "+item.path);
+                this.listAllFiles.add(item);
+            }
+
+            this.mapAllFileSetions = GalleryUtil.groupListSectionByDate(listAllFiles);
+            ((SearchFragment) this.searchFrag).updateUI(listAllFiles, mapAllFileSetions);
+
+            mapAllFolders = GalleryUtil.groupListAllAlbums(listAllFiles);
+            tvNumOfAlbums.setText(String.valueOf(mapAllFolders.size()));
+
+            ((AlbumsFragment) albumsFragment).updateUI(mapAllFolders);
+            ((SelectAlbumFragment) selectAlbumFrag).updateUI(mapAllFolders);
+
+
+            List<String> indexes = new ArrayList<String>(mapAllFolders.keySet()); // <== Set to List
+            int position = ((AlbumsFragment) albumsFragment).getPosition();
+            try {
+                String key = indexes.get(position);
+                ArrayList<FileItem> listFilesInCurDir = mapAllFolders.get(key);
+                ((FilesAlbumFragment) filesAlbumFrag).updateUI(listFilesInCurDir);
+            } catch (Exception npe) {
+                npe.printStackTrace();
+            }
+        }
+
+        if (arrImg.size() > 0) {
+
+            Flog.d(TAG, "arrImg before="+listAllImgs.size());
+            for (int i = 0; i < arrImg.size(); i++) {
+                FileItem item = arrImg.get(i);
+                Flog.d(TAG, "copy at " + ": " + item.path);
+                this.listAllImgs.add(item);
+            }
+            Flog.d(TAG, "arrImg after="+listAllImgs.size());
+
+            this.mapAllImgSections = GalleryUtil.groupListSectionByDate(this.listAllImgs);
+            ((PhotoFragment) photoFragment).updateUI(listAllImgs, mapAllImgSections);
+            tvNumOfPhotos.setText(String.valueOf(listAllImgs.size()));
+        }
+
+        if (arrVideo.size() > 0) {
+
+            for (int i = 0; i < arrVideo.size(); i++) {
+                FileItem item = arrVideo.get(i);
+                //            Flog.d(TAG, "delete at "+listSorted1.get(i)+": "+item.path);
+                this.listAllVideos.add(item);
+            }
+
+            this.mapAllVideoSections = GalleryUtil.groupListSectionByDate(this.listAllVideos);
+            ((VideoFragment) videoFragment).updateUI(listAllVideos, mapAllVideoSections);
+            tvNumOfVideos.setText(String.valueOf(listAllVideos.size()));
+        }
+
+        Flog.d(TAG, "size after deleted: " + this.listAllImgs.size());
+
+        ((FavouriteFragment) favouriteFragment).refreshList();
+
+        hideDialog();
+    }
+
+    public void refreshGallery() {
+        Flog.d(TAG, "jump to refreshGallery");
+        try {
+
+            ArrayList<FileItem> listAllFiles = new ArrayList<>();
+            ArrayList<FileItem> listAllImgs = GalleryUtil.getAllImages(this);
+            ArrayList<FileItem> listAllVideos = GalleryUtil.getAllVideos(this);
+
+
+            ArrayList<FileItem> listAllMediaSdcard = new ArrayList<>();
+            GalleryUtil.getAllMediaSdcard(ContentActivity.this, listAllMediaSdcard);
+            Flog.d(TAG, "re SIZE listAllMediaSdcard=" + listAllMediaSdcard.size());
+            ArrayList<FileItem> listAllImgsSdcard = new ArrayList<>();
+            ArrayList<FileItem> listAllVideosSdcard = new ArrayList<>();
+            for (int i = 0; i < listAllMediaSdcard.size(); i++) {
+                FileItem item = listAllMediaSdcard.get(i);
+                if (item.isImage) {
+                    listAllImgsSdcard.add(item);
+                } else {
+                    listAllVideosSdcard.add(item);
+                }
+            }
+            listAllImgs.addAll(listAllImgsSdcard);
+            listAllVideos.addAll(listAllVideosSdcard);
+            Flog.d(TAG, "re SIZE SDCARD FILES=" + listAllImgsSdcard.size() + "_" + listAllVideosSdcard.size() + "_" + listAllMediaSdcard.size());
+
+
+            listAllFiles.addAll(listAllImgs);
+            listAllFiles.addAll(listAllVideos);
+            Flog.d(TAG, "re SIZE ALL FILES=" + listAllImgs.size() + "_" + listAllVideos.size() + "_" + listAllFiles.size());
+
+            /**
+             * Sort all files descending based-on date-modified.
+             * */
+            Collections.sort(listAllFiles, new Comparator<FileItem>() {
+                @Override
+                public int compare(FileItem f1, FileItem f2) {
+
+                    if (f1 == null || f2 == null || f1.date_modified == null || f2.date_modified == null) {
+//                                Flog.d(TAG, "123compare = "+f1 + "_f2= "+f2);
+                        return 0;
+                    }
+
+//                            Flog.d(TAG, "cmmp: f1="+f1.date_modified+"_f2="+f2.date_modified);
+                    long v1 = Utils.parseLong(f1.date_modified);
+                    long v2 = Utils.parseLong(f2.date_modified);
+                    if (v1 == -1 || v2 == -1) {
+                        return 0;
+                    }
+
+                    int cmp = 0;
+                    if (v1 > v2) {
+                        cmp = -1;
+                    } else if (v1 < v2) {
+                        cmp = 1;
+                    }
+                    return cmp;
+                }
+            });
+
+
+            this.listAllFiles.clear();
+            this.listAllFiles.addAll(listAllFiles);
+
+            loadAllFolders();
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
+    }
+
+    @Override // Load all folders is finished.
+    public void onGroupFilesFinished(ArrayList<FileItem> listImgs,
+                                     ArrayList<FileItem> listVideos,
+                                     HashMap<String, ArrayList<FileItem>> listFolders,
+                                     Map<String, ArrayList<FileItem>> listImgSections,
+                                     Map<String, ArrayList<FileItem>> listVideoSections,
+                                     Map<String, ArrayList<FileItem>> listFileSections) {
+
+        if (listFolders == null || listVideos == null || listImgs == null) {
+            toastLoadGalleryFailed();
+            start();
+            return;
+        }
+
+        listAllImgs = listImgs;
+        listAllVideos = listVideos;
+        mapAllFolders = listFolders;
+        mapAllImgSections = listImgSections;
+        mapAllVideoSections = listVideoSections;
+        mapAllFileSetions = listFileSections;
+        Flog.d(TAG, "list final: imgs=" + listAllImgs.size() + "_videos=" + listAllVideos.size() + "_folders=" + mapAllFolders.size()
+                + "_imgsecs=" + mapAllImgSections.size() + "_videosecs=" + mapAllVideoSections.size() + "_filesecs=" + mapAllFileSetions.size());
+
+//        GalleryUtil.logListFolder(mapAllFolders);
+
+
+//        if (fm == null) {
+//            addFrags();
+//            setValues();
+//        }
+
+        if (cnt == TOTAL_THREADS) {
+            fillData();
+        } else {
+            start();
+        }
+    }
+
+    private void start() {
+
+        cnt++;
+        Flog.d(TAG, "cnt==" + cnt);
+        if (cnt == TOTAL_THREADS) {
+            fillData();
+        }
+    }
+
+    private void fillData() {
+        initData();
+        updateUI();
+        hideDialog();
+    }
+
+    private void initData() {
+        ((PhotoFragment) photoFragment).initialize(listAllImgs, mapAllImgSections);
+        ((VideoFragment) videoFragment).initialize(listAllVideos, mapAllVideoSections);
+        ((AlbumsFragment) albumsFragment).initialize(mapAllFolders);
+        SearchFragment searchFragment = (SearchFragment) this.searchFrag;
+        searchFragment.initialize(listAllFiles, mapAllFileSetions);
+        ((SelectAlbumFragment) selectAlbumFrag).initialize(mapAllFolders);
+    }
+
+    private void updateUI() {
+        tvNumOfPhotos.setText(String.valueOf(listAllImgs.size()));
+        tvNumOfVideos.setText(String.valueOf(listAllVideos.size()));
+        tvNumOfAlbums.setText(String.valueOf(mapAllFolders.size()));
+
+        ((PhotoFragment) photoFragment).updateUI(listAllImgs, mapAllImgSections);
+        ((VideoFragment) videoFragment).updateUI(listAllVideos, mapAllVideoSections);
+        ((AlbumsFragment) albumsFragment).updateUI(mapAllFolders);
+        SearchFragment searchFragment = (SearchFragment) this.searchFrag;
+        searchFragment.updateUI(listAllFiles, mapAllFileSetions);
+        ((SelectAlbumFragment) selectAlbumFrag).updateUI(mapAllFolders);
+
+
+        List<String> indexes = new ArrayList<String>(mapAllFolders.keySet()); // <== Set to List
+        int position = ((AlbumsFragment) albumsFragment).getPosition();
+        try {
+            String key = indexes.get(position);
+            ArrayList<FileItem> listFilesInCurDir = mapAllFolders.get(key);
+            ((FilesAlbumFragment) filesAlbumFrag).updateUI(listFilesInCurDir);
+        } catch (Exception npe) {
+            npe.printStackTrace();
+        }
+
+        ((FavouriteFragment) favouriteFragment).refreshList();
+        setTextNumOfSelected(0);
+    }
+
+    @Override
+    public void onPhotoFragmentReady() {
+//        ((PhotoFragment) photoFragment).initialize(listAllImgs, mapAllImgSections);
+        start();
+    }
+
+
+    @Override
+    public void onItemInPhotoLongClicked(FileItem file) {
+        handleItemLongClicked(file);
+    }
+
+    private void showMyToolbar(boolean shown) {
+        isMultiSelectMode = !shown;
+        myToolbar.setVisibility(shown ? View.VISIBLE : View.GONE);
+        multiSelectToolbar.setVisibility(!shown ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onItemInPhotoClicked(FileItem file, int numOfSelected) {
+        handleItemClicked(file, numOfSelected);
+    }
+
+    private void handleItemClicked(FileItem file, int numOfSelected) {
+        if (file == null) {
+            return;
+        }
+
+        setTextNumOfSelected(numOfSelected);
+    }
+
+    @Override
+    public void openPhotoViewer(FileItem file) {
+        Flog.d(TAG, "openPhotoViewer=" + file);
+        showOptFrag(BaseFragment.FRAGMENT_PHOTO_VIEWER);
+        PhotoViewerFragment photoViewerFragment = (PhotoViewerFragment) this.photoViewerFrag;
+        photoViewerFragment.open(file);
+
+        parentCurFragID = -1;
+    }
+
+    @Override
+    public void onVideoFragmentReady() {
+//        ((VideoFragment) videoFragment).initialize(listAllVideos, mapAllVideoSections);
+        start();
+    }
+
+    @Override
+    public void onItemInVideoLongClicked(FileItem file) {
+        handleItemLongClicked(file);
+    }
+
+    private void handleItemLongClicked(AlbumItem album) {
+        if (album == null) {
+            return;
+        }
+
+        showMyToolbar(false);
+        setTextNumOfSelected(1);
+        Utils.scaleView(tabLayout, 1, 0);
+
+        setHeightViewPager(heightLargeViewPager);
+        viewPager.animate().translationY(-heightTabLayout).setDuration(ConstValue.ANIM_DURATION);
+
+        Flog.d(TAG, "onGlobalLayout height123=" + mHeightAdmobBanner);
+    }
+
+    private void handleItemLongClicked(FileItem file) {
+        if (file == null) {
+            return;
+        }
+
+        showMyToolbar(false);
+        setTextNumOfSelected(1);
+        Utils.scaleView(tabLayout, 1, 0);
+
+        setHeightViewPager(heightLargeViewPager);
+        viewPager.animate().translationY(-heightTabLayout).setDuration(ConstValue.ANIM_DURATION);
+
+        Flog.d(TAG, "onGlobalLayout height123=" + mHeightAdmobBanner);
+    }
+
+    @Override
+    public void onItemInVideoClicked(FileItem file, int numOfSelected) {
+        handleItemClicked(file, numOfSelected);
+    }
+
+    @Override
+    public void openVideoViewer(FileItem file) {
+        Flog.d(TAG, "openVideoViewer=" + file);
+        showOptFrag(BaseFragment.FRAGMENT_VIDEO_VIEWER);
+        VideoViewerFragment videoViewerFragment = (VideoViewerFragment) this.videoViewerFrag;
+        videoViewerFragment.open(file);
+
+        parentCurFragID = -1;
+    }
+
+    @Override
+    public void onAlbumsFragmentReady() {
+        start();
+    }
+
+    @Override
+    public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles) {
+        showOptFrag(BaseFragment.FRAGMENT_FILES_ALBUM);
+        ((FilesAlbumFragment) filesAlbumFrag).show(nameAlbum, listFiles);
+    }
+
+    @Override
+    public void onItemAlbumLongClicked(AlbumItem album) {
+        handleItemLongClicked(album);
+    }
+
+    @Override
+    public void onItemAlbumClicked(AlbumItem album, int numOfSelected) {
+        setTextNumOfSelected(numOfSelected);
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.btn_nav:
+                openNavigationBar();
+                break;
+            case R.id.btn_search:
+                showOptFrag(BaseFragment.FRAGMENT_SEARCH);
+                ((SearchFragment) searchFrag).show();
+                break;
+            case R.id.btn_gift:
+                showAdDialogApps();
+//                showAds();
+                break;
+            case R.id.btn_open_tab_photos:
+                openTabAt(0);
+                closeNavigationLayout();
+                break;
+            case R.id.btn_open_tab_videos:
+                openTabAt(1);
+                closeNavigationLayout();
+                break;
+            case R.id.btn_open_tab_albums:
+                openTabAt(2);
+                closeNavigationLayout();
+                break;
+            case R.id.btn_security:
+                // TODO:
+                break;
+            case R.id.btn_theme:
+                openColorPicker();
+                break;
+            case R.id.btn_feedback:
+                Utils.showFeedbackDialog(this, getPackageName(), "khanhqh2008i@gmail.com");
+                closeNavigationLayout();
+                break;
+            case R.id.btn_rate_app:
+                Utils.rateApp(this);
+                closeNavigationLayout();
+                break;
+            case R.id.btn_share_app:
+                Utils.shareApp(this);
+                closeNavigationLayout();
+                break;
+            case R.id.btn_version:
+                showVersionDialog(this, mNameVersion);
+                break;
+            case R.id.btn_back_multiselected:
+                handleBackMultiSelected();
+                break;
+            case R.id.btn_delete_multiselected:
+                handleDeleteMultiSelected();
+                break;
+            case R.id.btn_more_multiselected:
+                if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+                    showPopupMulAlbumDialog();
+                } else {
+                    showPopupMulFileDialog();
+                }
+                break;
+        }
+    }
+
+    private void showAdDialogApps() {
+        CrsDialogFragment crsDialogFragment = new CrsDialogFragment().setOnYesListener(new CrsDialogFragment.OnYesListener() {
+            @Override
+            public void onYesClickListener() {
+                finishAffinity();
+            }
+        });
+        crsDialogFragment.setCancelable(false);
+        crsDialogFragment.show(getSupportFragmentManager(), "CrsDialogFragment");
+
+        showAds();
+    }
+
+    private void showPopupMulAlbumDialog() {
+
+        // mis-clicking prevention, using threshold of 1000 ms
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
+        // do your magic here
+
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // add a list
+        String[] animals = {getString(R.string.share), getString(R.string.select_all),
+                getString(R.string.unselect_all)};
+        builder.setItems(animals, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // share
+                        actionShareFiles();
+                        break;
+                    case 1: // select all
+                        actionSelectAll();
+                        break;
+                    case 2: // unselect all
+                        actionUnselectAll();
+                        break;
+                }
+                dialog.dismiss();
+            }
+        });
+
+        // create and open the alert dialogPopup
+        AlertDialog dialogPopup = builder.create();
+
+        Window window = dialogPopup.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+
+        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        window.setAttributes(wlp);
+
+        dialogPopup.show();
+    }
+
+    private void openColorPicker() {
+        FragmentManager manager = getSupportFragmentManager();
+        ColorPickerDialogFragment sd = new ColorPickerDialogFragment().setListener(this);
+        sd.show(manager, ColorPickerDialogFragment.class.getSimpleName());
+    }
+
+    private void handleDeleteMultiSelected() {
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            if (!FLAG_REFRESH_OPTIMIZE) {
+                ((PhotoFragment) photoFragment).deleteFilesSelected(new OnDialogEventListener() {
+                    @Override
+                    public void onOk() {
+                        handleBackMultiSelected();
+                        refreshGallery();
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+            } else {
+                ((PhotoFragment) photoFragment).deleteFilesSelected(new OnFileDialogEventListener() {
+                    @Override
+                    public void onOk(FileItem... items) {
+                        handleBackMultiSelected();
+                        refreshFileGalleryDeleted(items);
+                    }
+                });
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            if (!FLAG_REFRESH_OPTIMIZE) {
+                ((VideoFragment) videoFragment).deleteFilesSelected(new OnDialogEventListener() {
+                    @Override
+                    public void onOk() {
+                        handleBackMultiSelected();
+                        refreshGallery();
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+            } else {
+                ((VideoFragment) videoFragment).deleteFilesSelected(new OnFileDialogEventListener() {
+                    @Override
+                    public void onOk(FileItem... items) {
+                        handleBackMultiSelected();
+                        refreshFileGalleryDeleted(items);
+                    }
+                });
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+            ((AlbumsFragment) albumsFragment).deleteAlbumsSelected(new OnFileDialogEventListener() {
+                @Override
+                public void onOk(FileItem... items) {
+                    handleBackMultiSelected();
+                    refreshFileGalleryDeleted(items);
+                }
+            });
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+
+            if (!FLAG_REFRESH_OPTIMIZE) {
+                ((FavouriteFragment) favouriteFragment).deleteFilesSelected(new OnDialogEventListener() {
+                    @Override
+                    public void onOk() {
+                        handleBackMultiSelected();
+                        refreshGallery();
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+            } else {
+                ((FavouriteFragment) favouriteFragment).deleteFilesSelected(new OnFileDialogEventListener() {
+                    @Override
+                    public void onOk(FileItem... items) {
+                        handleBackMultiSelected();
+                        refreshFileGalleryDeleted(items);
+                    }
+                });
+            }
+        }
+    }
+
+    private void showPopupMulFileDialog() {
+        if (dialogPopupMulFile != null && !dialogPopupMulFile.isShowing()) {
+            dialogPopupMulFile.show();
+        }
+    }
+
+    private void showPopupFileDialog(int type, final FileItem fileItem) {
+
+        // mis-clicking prevention, using threshold of 1000 ms
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
+        // do your magic here
+
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // add a list
+        String[] items = null;
+
+        if (type == BaseFragment.FRAGMENT_PHOTO_VIEWER) {
+            items = new String[]{getString(R.string.details),
+                    getString(R.string.rename), getString(R.string.open_with),
+                    getString(R.string.edit),
+                    getString(R.string.set_picture_as)};
+        } else if (type == BaseFragment.FRAGMENT_VIDEO_VIEWER) {
+            items = new String[]{getString(R.string.details),
+                    getString(R.string.rename), getString(R.string.open_with)};
+        }
+
+        if (fileItem.path.endsWith(".gif")) {
+            items = new String[]{getString(R.string.details),
+                    getString(R.string.rename), getString(R.string.open_with)};
+        }
+
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // details
+                        actionDetails(fileItem);
+                        break;
+                    case 1: // rename
+                        actionRename(fileItem);
+                        break;
+                    case 2: // open with
+                        actionOpenWith(fileItem);
+                        break;
+                    case 3: // edit
+                        actionEditPhoto(fileItem);
+                        break;
+                    case 4: // set picture as
+                        actionSetPictureAs(fileItem);
+                        break;
+                }
+                dialog.dismiss();
+            }
+        });
+
+        // create and open the alert dialogPopupMulFile
+        dialogPopupFile = builder.create();
+
+        Window window = dialogPopupFile.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+
+        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        window.setAttributes(wlp);
+
+        if (dialogPopupFile != null && !dialogPopupFile.isShowing()) {
+            dialogPopupFile.show();
+        }
+    }
+
+    private void actionEditPhoto(FileItem fileItem) {
+
+        Intent intent = new Intent(ContentActivity.this, EditPhotoActivity.class);
+        intent.putExtra(ConstValue.EXTRA_FILE_ITEM_TO_EDIT, fileItem);
+        startActivityForResult(intent, ConstValue.REQUEST_CODE_EDIT_PHOTO_ACTIVITY);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Flog.d(TAG, "2onActivityResult=" + data + "_resultCode=" + resultCode);
+        FLAG_RELOAD_GALLERY = false;
+        if (resultCode == RESULT_OK && requestCode == ConstValue.REQUEST_CODE_EDIT_PHOTO_ACTIVITY) {
+//            ((PhotoViewerFragment) photoViewerFrag).updateImage();
+
+            if (!FLAG_REFRESH_ENABLE) {
+                refreshGallery();
+            }
+            showOptFrag(parentCurFragID);
+        }
+    }
+
+    private void actionRename(FileItem fileItem) {
+        openDialogInputName(fileItem);
+    }
+
+    private void openDialogInputName(final FileItem fileItem) {
+
+        LayoutInflater li = LayoutInflater.from(this);
+        View promptsView = li.inflate(R.layout.dialog_input_filename, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInput = (EditText) promptsView
+                .findViewById(R.id.editTextDialogUserInput);
+        userInput.setText(fileItem.name);
+        userInput.selectAll();
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.ok),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // get user input and set it to result
+                                // edit text
+
+                                try {
+
+                                    String input = userInput.getText().toString();
+
+                                    if (input.length() <= 0) {
+                                        return;
+                                    }
+
+                                    String path = fileItem.path;
+
+                                    String newPath = new File(path).getParent() + File.separator + input + FileUtil.getExtension(path);
+
+                                    boolean success =
+                                            FileUtil.rename(ContentActivity.this, new File(path), input + FileUtil.getExtension(path));
+                                    Flog.d(TAG, "rename success=" + success);
+
+                                    if (success) {
+                                        if (fileItem.isImage) {
+                                            ((PhotoViewerFragment) photoViewerFrag).updateUI(input, newPath);
+                                        } else {
+                                            ((VideoViewerFragment) videoViewerFrag).updateUI(input, newPath);
+                                        }
+                                        FileUtil.scanMediaStore(ContentActivity.this, newPath);
+                                        if (!FLAG_REFRESH_ENABLE) {
+                                            refreshGallery();
+                                        }
+                                        FileUtil.toastSuccess(ContentActivity.this, getString(R.string.rename));
+                                    } else {
+                                        FileUtil.toastFailed(ContentActivity.this, getString(R.string.rename));
+                                    }
+
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    FileUtil.toastFailed(ContentActivity.this, getString(R.string.rename));
+                                }
+
+
+                                KeyboardUtil.hideKeyboard(ContentActivity.this, userInput);
+                            }
+                        })
+                .setNegativeButton(getString(R.string.cancel),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                KeyboardUtil.hideKeyboard(ContentActivity.this, userInput);
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        alertDialog = alertDialogBuilder.create();
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+
+        // show it
+        alertDialog.show();
+
+        // Initially disable the button
+        ((AlertDialog) alertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
+                .setEnabled(false);
+
+        // Now set the textchange listener for edittext
+        userInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (TextUtils.isEmpty(s)) {
+                    // Disable ok button
+                    ((AlertDialog) alertDialog).getButton(
+                            AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                } else {
+                    // Something into edit text. Enable the button.
+                    ((AlertDialog) alertDialog).getButton(
+                            AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                }
+            }
+        });
+    }
+
+    private void actionSetPictureAs(FileItem fileItem) {
+        FileUtil.setPictureAs(this, fileItem.path);
+    }
+
+    private void actionOpenWith(FileItem fileItem) {
+
+        FLAG_OPEN_WITH_ACTION = FLAG_MODE_ENABLE;
+        SearchFragment.FLAG_SHARE_IN_SEARCH = FLAG_MODE_DISABLE;
+        FilesAlbumFragment.FLAG_SHARE_IN_FILEALBUM = FLAG_MODE_DISABLE;
+        Flog.d(TAG, "actionOpenWith=" + FLAG_RELOAD_GALLERY);
+        if (fileItem.isImage) {
+            FileUtil.openPhotoIntent(this, fileItem.path);
+        } else {
+            FileUtil.openVideoIntent(this, fileItem.path);
+        }
+    }
+
+    private void actionDetails(FileItem fileItem) {
+        openDialogDetailsFile(fileItem);
+    }
+
+    private void openDialogDetailsFile(FileItem fileItem) {
+
+        LayoutInflater li = LayoutInflater.from(this);
+        View promptsView = li.inflate(R.layout.dialog_details_file, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final LinearLayout lnInfoContainer = promptsView.findViewById(R.id.info_container);
+
+        addText(lnInfoContainer, getString(R.string.filename), fileItem.name);
+        addText(lnInfoContainer, getString(R.string.last_modified),
+                DateUtils.getDate(Utils.parseLong(fileItem.date_modified), DateUtils.FORMAT_DATE_2));
+
+        Flog.d(TAG, "size of file=" + fileItem.size);
+        addText(lnInfoContainer, getString(R.string.size),
+                FileUtil.formatSize(Utils.parseLong(fileItem.size)));
+        addText(lnInfoContainer, getString(R.string.filetype), fileItem.mime_type);
+        addText(lnInfoContainer, getString(R.string.width), fileItem.width);
+        addText(lnInfoContainer, getString(R.string.height), fileItem.height);
+        if (!fileItem.isImage) {
+            addText(lnInfoContainer, getString(R.string.duration),
+                    (fileItem.duration == null ? null : Utils.milliSecondsToTimer(Utils.parseLong(fileItem.duration))));
+        } else {
+            addText(lnInfoContainer, getString(R.string.orientation),
+                    fileItem.orientation == null ? null : (fileItem.orientation + "°"));
+        }
+        addText(lnInfoContainer, getString(R.string.path), fileItem.path);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+
+    }
+
+    private void addText(LinearLayout lnInfoContainer, String label, String text) {
+        if (text == null || text.equals("null"))
+            return;
+        LinearLayout.LayoutParams parentParams = (LinearLayout.LayoutParams) lnInfoContainer.getLayoutParams();
+
+        TextView textView = new TextView(this);
+        textView.setLayoutParams(parentParams);
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) textView.getLayoutParams();
+        params.setMargins(0, 0, 0, (int) getResources().getDimension(R.dimen.margin_small_size));
+        String sourceString = "<b>" + label + ": " + "</b> " + text;
+        textView.setText(Html.fromHtml(sourceString));
+
+        lnInfoContainer.addView(textView);
+    }
+
+    private void initPopupMulFileDialog() {
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // add a list
+        String[] animals = {getString(R.string.share), getString(R.string.copy),
+                getString(R.string.move), getString(R.string.select_all),
+                getString(R.string.unselect_all)};
+        builder.setItems(animals, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0: // share
+                        actionShareFiles();
+                        break;
+                    case 1: // copy
+                        actionCopyFiles();
+                        break;
+                    case 2: // move
+                        actionMoveFiles();
+                        break;
+                    case 3: // select all
+                        actionSelectAll();
+                        break;
+                    case 4: // unselect all
+                        actionUnselectAll();
+                        break;
+                }
+                dialog.dismiss();
+            }
+        });
+
+        // create and open the alert dialogPopupMulFile
+        dialogPopupMulFile = builder.create();
+
+        Window window = dialogPopupMulFile.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+
+        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        window.setAttributes(wlp);
+    }
+
+    private void actionMoveFiles() {
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            HashMap<Integer, FileItem> mapPosChanged = ((PhotoFragment) photoFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.move));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            HashMap<Integer, FileItem> mapPosChanged = ((VideoFragment) videoFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.move));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+            HashMap<Integer, FileItem> mapPosChanged = ((FavouriteFragment) favouriteFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.move));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
+            }
+        }
+    }
+
+    private void actionCopyFiles() {
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            HashMap<Integer, FileItem> mapPosChanged = ((PhotoFragment) photoFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.copy));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            HashMap<Integer, FileItem> mapPosChanged = ((VideoFragment) videoFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.copy));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+
+            HashMap<Integer, FileItem> mapPosChanged = ((FavouriteFragment) favouriteFragment).getListPositionChanged();
+            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+            if (listPosChanged.size() <= 0) {
+                showHintSelectImgsDialog(getString(R.string.copy));
+            } else {
+                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
+            }
+        }
+    }
+
+    private void showHintSelectImgsDialog(String action) {
+        Toast.makeText(this, getString(R.string.please_select_media_for)
+                + " " + action, Toast.LENGTH_LONG).show();
+    }
+
+    private void openSelectAlbum(int typeAction, ArrayList<FileItem> listPosChanged) {
+        ((SelectAlbumFragment) selectAlbumFrag).show(typeAction, listPosChanged);
+        showOptFrag(BaseFragment.FRAGMENT_SELECT_ALBUM);
+    }
+
+    private ArrayList<FileItem> getListFromMap(HashMap<Integer, FileItem> mapPosChanged) {
+        ArrayList<FileItem> list = new ArrayList<>();
+        for (Map.Entry<Integer, FileItem> entry : mapPosChanged.entrySet()) {
+            FileItem fileItem = entry.getValue();
+            list.add(fileItem);
+        }
+        return list;
+    }
+
+    private void actionUnselectAll() {
+
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            ((PhotoFragment) photoFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            ((VideoFragment) videoFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+            ((AlbumsFragment) albumsFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+
+            ((FavouriteFragment) favouriteFragment).unselectAll();
+        }
+
+        setTextNumOfSelected(0);
+    }
+
+    private void actionSelectAll() {
+
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            ((PhotoFragment) photoFragment).selectAll();
+            setTextNumOfSelected(listAllImgs.size());
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            ((VideoFragment) videoFragment).selectAll();
+            setTextNumOfSelected(listAllVideos.size());
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+            ((AlbumsFragment) albumsFragment).selectAll();
+            setTextNumOfSelected(mapAllFolders.size());
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+
+            ((FavouriteFragment) favouriteFragment).selectAll();
+            setTextNumOfSelected(listAllVideos.size());
+        }
+    }
+
+    private void actionShareFiles() {
+
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            boolean shared = ((PhotoFragment) photoFragment).shareFilesSelected();
+            if (!shared) {
+                showHintSelectImgsDialog(getString(R.string.share));
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            boolean shared = ((VideoFragment) videoFragment).shareFilesSelected();
+            if (!shared) {
+                showHintSelectImgsDialog(getString(R.string.share));
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+            boolean shared = ((AlbumsFragment) albumsFragment).shareAlbumsSelected();
+            if (!shared) {
+                showHintSelectImgsDialog(getString(R.string.share));
+            }
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+
+            boolean shared = ((FavouriteFragment) favouriteFragment).shareFilesSelected();
+            if (!shared) {
+                showHintSelectImgsDialog(getString(R.string.share));
+            }
+        }
+    }
+
+    private void handleBackMultiSelected() {
+
+        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
+
+            ((PhotoFragment) photoFragment).setLongClickedEvent(false);
+            ((PhotoFragment) photoFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
+
+            ((VideoFragment) videoFragment).setLongClickedEvent(false);
+            ((VideoFragment) videoFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
+
+            ((AlbumsFragment) albumsFragment).setLongClickedEvent(false);
+            ((AlbumsFragment) albumsFragment).unselectAll();
+        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
+            ((FavouriteFragment) favouriteFragment).setLongClickedEvent(false);
+            ((FavouriteFragment) favouriteFragment).unselectAll();
+        }
+
+        showMyToolbar(true);
+        Utils.scaleView(tabLayout, 0, 1);
+
+        setHeightViewPager(heightNormalViewPager);
+        viewPager.animate().translationY(0).setDuration(ConstValue.ANIM_DURATION);
+    }
+
+    private void setHeightViewPager(int heightViewPager) {
+        ViewGroup.LayoutParams params = viewPager.getLayoutParams();
+        params.height = heightViewPager;
+        viewPager.requestLayout();
+    }
+
+    private void showAds() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                showFullAds();
+            }
+        }, 1000);
+    }
+
+    private void showFullAds() {
+
+
+        if (admobFullHelper != null) {
+            admobFullHelper.show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        if (FLAG_RELOAD_GALLERY) {
+            Flog.d(TAG, "refresh lazy!!!");
+            refreshGallery();
+        }
+        FLAG_RELOAD_GALLERY = false;
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        Flog.d(TAG, "onPause=" + FLAG_RELOAD_GALLERY);
+        setFlags();
+
+        super.onPause();
+    }
+
+    private void setFlags() {
+
+        if (FLAG_OPEN_WITH_ACTION == FLAG_MODE_ENABLE) {
+            FLAG_RELOAD_GALLERY = false;
+            FLAG_OPEN_WITH_ACTION = FLAG_MODE_DISABLE;
+        } else if (SearchFragment.FLAG_SHARE_IN_SEARCH == FLAG_MODE_ENABLE) {
+            FLAG_RELOAD_GALLERY = false;
+            SearchFragment.FLAG_SHARE_IN_SEARCH = FLAG_MODE_DISABLE;
+        } else if (FilesAlbumFragment.FLAG_SHARE_IN_FILEALBUM == FLAG_MODE_ENABLE) {
+            FLAG_RELOAD_GALLERY = false;
+            FilesAlbumFragment.FLAG_SHARE_IN_FILEALBUM = FLAG_MODE_DISABLE;
+        } else {
+            FLAG_RELOAD_GALLERY = true;
+            ContentActivity.FLAG_OPEN_WITH_ACTION = FLAG_MODE_DISABLE;
+            FilesAlbumFragment.FLAG_SHARE_IN_FILEALBUM = FLAG_MODE_DISABLE;
+            SearchFragment.FLAG_SHARE_IN_SEARCH = FLAG_MODE_DISABLE;
+        }
+    }
+
+    private void initAdmob() {
+        buildAppRate(this, new OnClickButtonListener() {
+            @Override
+            public void onClickButton(int i) {
+                finish();
+            }
+        });
+
+        admobFullHelper = AdmobFullHelper.init(this)
+                .setEnableAd(true)
+                .setAdUnitId(getString(R.string.full_admob))
+                .setShowAfterLoaded(false);
+        admobFullHelper.load();
+
+        admobBanner = (ViewGroup) findViewById(R.id.admob_banner);
+        AdmobBannerHelper.init(getApplicationContext(), admobBanner)
+                .setAdUnitId(getString(R.string.smart_banner_ad_id))
+                .setAdSize(AdSize.SMART_BANNER)
+                .loadAd();
+
+        admobBanner.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int height = admobBanner.getHeight();
+//                Flog.d(TAG, "onGlobalLayout height=" + height);
+                if (mHeightAdmobBanner == 0 && height >= 0) {
+                    // now the height is gotten, you can do things you want
+                    mHeightAdmobBanner = height;
+
+                    getHeightViews();
+                }
+            }
+        });
+    }
+
+    private void openTabAt(int position) {
+        try {
+            tabLayout.getTabAt(position).select();
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+        }
+    }
+
+    private void showVersionDialog(Activity context, String version) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(context.getString(R.string.version))
+                .setMessage(version)
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        dialog.dismiss();
+                    }
+                });
+//                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+//                    public void onClick(final DialogInterface dialogPopupMulFile, @SuppressWarnings("unused") final int id) {
+//                        dialogPopupMulFile.dismiss();
+//                    }
+//                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    @Override
+    public void onSearchFragmentReady() {
+//        SearchFragment searchFragment = (SearchFragment) this.searchFrag;
+//        searchFragment.initialize(listAllFiles, mapAllFileSetions);
+        start();
+    }
+
+    @Override
+    public void onBackSearchFragment() {
+        showOptFrag(-1);
+        ((SearchFragment) searchFrag).reset();
+    }
+
+    @Override
+    public void openFileViewerFromSearch(FileItem file) {
+        openFileViewer(file);
+
+        parentCurFragID = BaseFragment.FRAGMENT_SEARCH;
+    }
+
+    @Override
+    public void onDeleteFileSearchFragment() {
+        if (!FLAG_REFRESH_OPTIMIZE) {
+            ((SearchFragment) searchFrag).deleteFilesSelected(new OnDialogEventListener() {
+                @Override
+                public void onOk() {
+                    refreshGallery();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+            });
+        } else {
+            ((SearchFragment) searchFrag).deleteFilesSelected(new OnFileDialogEventListener() {
+                @Override
+                public void onOk(FileItem... items) {
+                    refreshFileGalleryDeleted(items);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onCopyFileSearchFragment(ArrayList<FileItem> list) {
+
+        if (list.size() <= 0) {
+            showHintSelectImgsDialog(getString(R.string.copy));
+        } else {
+            openSelectAlbum(ConstValue.ACTION_COPY, list);
+        }
+    }
+
+    @Override
+    public void onMoveFileSearchFragment(ArrayList<FileItem> list) {
+
+        if (list.size() <= 0) {
+            showHintSelectImgsDialog(getString(R.string.move));
+        } else {
+            openSelectAlbum(ConstValue.ACTION_MOVE, list);
+        }
+    }
+
+    @Override
+    public void onBackFileAlbumsFragment() {
+        showOptFrag(-1);
+    }
+
+    @Override
+    public void openFileViewer(FileItem file) {
+        if (file.isImage) {
+            openPhotoViewer(file);
+        } else {
+            openVideoViewer(file);
+        }
+
+        parentCurFragID = BaseFragment.FRAGMENT_FILES_ALBUM;
+    }
+
+    @Override
+    public void onDeleteFileAlbumFragment() {
+        if (!FLAG_REFRESH_OPTIMIZE) {
+            ((FilesAlbumFragment) filesAlbumFrag).deleteFilesSelected(new OnDialogEventListener() {
+                @Override
+                public void onOk() {
+                    refreshGallery();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+            });
+        } else {
+            ((FilesAlbumFragment) filesAlbumFrag).deleteFilesSelected(new OnFileDialogEventListener() {
+                @Override
+                public void onOk(FileItem... items) {
+                    refreshFileGalleryDeleted(items);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onDeleteAlbum() {
+        if (!FLAG_REFRESH_OPTIMIZE) {
+            ((FilesAlbumFragment) filesAlbumFrag).deleteCurAlbum(new OnDialogEventListener() {
+                @Override
+                public void onOk() {
+                    onBackFileAlbumsFragment();
+                    refreshGallery();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+            });
+        } else {
+            ((FilesAlbumFragment) filesAlbumFrag).deleteCurAlbum(new OnFileDialogEventListener() {
+                @Override
+                public void onOk(FileItem... items) {
+                    Flog.d(TAG, "action back fulfilled");
+                    onBackFileAlbumsFragment();
+                    refreshFileGalleryDeleted(items);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onCopyFileAlbumFragment(ArrayList<FileItem> listFromMap) {
+
+        if (listFromMap.size() <= 0) {
+            showHintSelectImgsDialog(getString(R.string.copy));
+        } else {
+            openSelectAlbum(ConstValue.ACTION_COPY, listFromMap);
+        }
+    }
+
+    @Override
+    public void onMoveFileAlbumFragment(ArrayList<FileItem> listFromMap) {
+
+        if (listFromMap.size() <= 0) {
+            showHintSelectImgsDialog(getString(R.string.move));
+        } else {
+            openSelectAlbum(ConstValue.ACTION_MOVE, listFromMap);
+        }
+    }
+
+    @Override
+    public void onPhotoViewerFragmentReady() {
+        PhotoViewerFragment photoViewerFragment = (PhotoViewerFragment) this.photoViewerFrag;
+        photoViewerFragment.setValues();
+    }
+
+    @Override
+    public void onBackPhotoViewerFragment() {
+        if (FLAG_REFRESH_ENABLE) {
+            refreshGallery();
+        }
+        showOptFrag(parentCurFragID);
+    }
+
+    @Override
+    public void onMorePhotoViewerFragment(FileItem fileItem) {
+        showPopupFileDialog(BaseFragment.FRAGMENT_PHOTO_VIEWER, fileItem);
+    }
+
+    @Override
+    public void onSharePhotoViewerFragment(FileItem fileItem) {
+        FileUtil.share(this, Uri.fromFile(new File(fileItem.path)));
+    }
+
+    @Override
+    public void onDeletePhotoViewerFragment(final FileItem fileItem) {
+        showDeleteDialog(this,
+                new OnFileDialogEventListener() {
+                    @Override
+                    public void onOk(FileItem... items) {
+                        onBackPhotoViewerFragment();
+                        if (!FLAG_REFRESH_ENABLE) {
+                            Flog.d(TAG, "onDeletePhotoViewerFragment");
+                            if (!FLAG_REFRESH_OPTIMIZE) {
+                                refreshGallery();
+                            } else {
+                                refreshFileGalleryDeleted(items);
+                            }
+                        }
+                    }
+                },
+                fileItem);
+    }
+
+    @Override
+    public void onCreateFileToFavouriteAlbum(FileItem fileItem) {
+
+
+        String srcPath = fileItem.path;
+
+        String nameNewFile = fileItem.name + FileUtil.getExtension(fileItem.path);
+        String dstPath = PhotoViewerFragment.PATH_TO_FAVOURITE_FOLDER + File.separator + nameNewFile;
+        Flog.d(TAG, "favourite " + ": src=" + srcPath + "\n\tdst=" + dstPath);
+
+        boolean success = true;
+        boolean exists = FileUtil.isFileExistsInMediaStore(this, dstPath);
+        Flog.d(TAG, "eexists=" + exists);
+        if (exists) {
+            FileUtil.delete(this, Uri.fromFile(new File(dstPath)));
+        }
+
+        try {
+            success &= FileUtil.copy(this, new File(srcPath), new File(dstPath), fileItem);
+        } catch (IOException e) {
+            e.printStackTrace();
+            success &= false;
+        }
+        Flog.d(TAG, "favourited " + success);
+    }
+
+    @Override
+    public void onDeleteFileToFavouriteAlbum(FileItem fileItem) {
+
+        String nameNewFile = fileItem.name + FileUtil.getExtension(fileItem.path);
+        String dstPath = PhotoViewerFragment.PATH_TO_FAVOURITE_FOLDER + File.separator + nameNewFile;
+        boolean success = FileUtil.delete(this, Uri.fromFile(new File(dstPath)));
+        Flog.d(TAG, "favourited removed " + success);
+    }
+
+    @Override
+    public void onUpdateToFavouriteAlbum() {
+        ((FavouriteFragment) favouriteFragment).refreshList();
+    }
+
+    private void showDeleteDialog(final Context context, final OnFileDialogEventListener listener, final FileItem... fileItem) {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        String title = context.getString(R.string.delete);
+        String message = context.getString(R.string.confirm_delete_dialog);
+        alert.setCancelable(false)
+                .setTitle(title)
+                .setMessage(message)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        int len = fileItem.length;
+                        Uri[] uries = new Uri[len];
+                        String[] paths = new String[len];
+
+                        ArrayList<FileItem> list = new ArrayList<>();
+                        String mes = "";
+                        for (int i = 0; i < len; i++) {
+                            FileItem item = fileItem[i];
+                            uries[i] = Uri.fromFile(new File(item.path));
+                            paths[i] = item.path;
+
+                            boolean success = FileUtil.delete(context, uries[i]);
+                            Flog.d(TAG, "success ATAA=" + success);
+                            if (success) {
+                                list.add(item);
+                                DbUtils.deleteFavourite(item);
+                            } else {
+                                mes += paths[i] + "\n";
+                            }
+                        }
+
+                        if (mes.equals("")) {
+                            FileUtil.toastSuccess(context, context.getString(R.string.delete));
+                            FileUtil.scanMediaStore(context, paths);
+                        } else {
+                            FileUtil.toastFailed(context, context.getString(R.string.delete) + ":\n" + mes);
+                        }
+
+                        FileItem[] items = new FileItem[list.size()];
+                        for (int i = 0; i < list.size(); i++) {
+                            items[i] = list.get(i);
+                        }
+                        if (listener != null) {
+                            listener.onOk(items);
+                        }
+                    }
+                }).show();
+    }
+
+    @Override
+    public void onVideoViewerFragmentReady() {
+        VideoViewerFragment videoViewerFragment = (VideoViewerFragment) this.videoViewerFrag;
+        videoViewerFragment.setValues();
+    }
+
+    @Override
+    public void onBackVideoViewerFragment() {
+        if (FLAG_REFRESH_ENABLE) {
+            refreshGallery();
+        }
+        showOptFrag(parentCurFragID);
+    }
+
+    @Override
+    public void onMoreVideoViewerFragment(FileItem fileItem) {
+        showPopupFileDialog(BaseFragment.FRAGMENT_VIDEO_VIEWER, fileItem);
+    }
+
+    @Override
+    public void onShareVideoViewerFragment(FileItem fileItem) {
+        FileUtil.share(this, Uri.fromFile(new File(fileItem.path)));
+    }
+
+    @Override
+    public void onDeleteVideoViewerFragment(final FileItem fileItem) {
+        showDeleteDialog(this,
+                new OnFileDialogEventListener() {
+                    @Override
+                    public void onOk(FileItem... items) {
+                        onBackVideoViewerFragment();
+                        if (!FLAG_REFRESH_ENABLE) {
+                            if (!FLAG_REFRESH_OPTIMIZE) {
+                                refreshGallery();
+                            } else {
+                                refreshFileGalleryDeleted(items);
+                            }
+                        }
+                    }
+                },
+                fileItem);
+    }
+
+    @Override
+    public void onSelectAlbumFragmentReady() {
+//        ((SelectAlbumFragment) selectAlbumFrag).initialize(mapAllFolders);
+        start();
+    }
+
+    @Override
+    public void onBackSelectAlbumFragment() {
+        showOptFrag(-1);
+        handleBackMultiSelected();
+        refreshGallery();
+    }
+
+    @Override
+    public void onUpdateMainUI(int typeAction, FileItem[] items) {
+        if (false) {
+            if (typeAction == ConstValue.ACTION_COPY) {
+                refreshFileGalleryCopied(items);
+            } else if (typeAction == ConstValue.ACTION_MOVE) {
+                refreshGallery();
+            }
+        } else {
+            refreshGallery();
+        }
+    }
+
+    @Override
+    public void onColorPicked(int color) {
+        int curColorApp = SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, R.color.colorPrimary);
+        Flog.d(TAG, "onColorPicked=" + curColorApp);
+
+        Intent intent = new Intent(ContentActivity.this, SplashActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onItemInFavouriteLongClicked(FileItem fileItem) {
+        handleItemLongClicked(fileItem);
+    }
+
+    @Override
+    public void onItemInFavouriteClicked(FileItem file, int numOfSelected) {
+        handleItemClicked(file, numOfSelected);
+    }
+
+    @Override
+    public void openFileFavouriteViewer(FileItem file) {
+        openFileViewer(file);
+        parentCurFragID = -1;
+    }
+
+    class ViewPagerAdapter extends FragmentPagerAdapter {
+        private final List<Fragment> mFragmentList = new ArrayList<>();
+        private final List<String> mFragmentTitleList = new ArrayList<>();
+
+        public ViewPagerAdapter(FragmentManager manager) {
+            super(manager);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return mFragmentList.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return mFragmentList.size();
+        }
+
+        public void addFragment(Fragment fragment, String title) {
+            mFragmentList.add(fragment);
+            mFragmentTitleList.add(title);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentTitleList.get(position);
+        }
+    }
+}

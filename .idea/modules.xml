@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/PhotoGallery.iml" filepath="$PROJECT_DIR$/PhotoGallery.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bettervideoplayer/bettervideoplayer.iml" filepath="$PROJECT_DIR$/bettervideoplayer/bettervideoplayer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib_filter/lib_filter.iml" filepath="$PROJECT_DIR$/lib_filter/lib_filter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib_sticker/lib_sticker.iml" filepath="$PROJECT_DIR$/lib_sticker/lib_sticker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/simplecropview/simplecropview.iml" filepath="$PROJECT_DIR$/simplecropview/simplecropview.iml" />
+    </modules>
+  </component>
+</project>

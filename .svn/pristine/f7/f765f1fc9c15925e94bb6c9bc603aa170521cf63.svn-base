@@ -1,0 +1,117 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/content_main_filter"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_app">
+
+    <RelativeLayout
+        android:id="@+id/topbar_filter"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/huge"
+        android:background="@color/bg_app"
+        android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/btn_filter_exit"
+            android:layout_width="@dimen/icon_size_small"
+            android:layout_height="@dimen/icon_size_small"
+            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
+            android:layout_margin="@dimen/small"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_exit" />
+
+
+        <android.support.v7.widget.LinearLayoutCompat
+            android:id="@+id/btn_filter_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true">
+
+            <ImageView
+                android:layout_width="@dimen/icon_size_small"
+                android:layout_height="@dimen/icon_size_small"
+                android:layout_margin="@dimen/small"
+                android:src="@drawable/ic_save" />
+        </android.support.v7.widget.LinearLayoutCompat>
+
+
+    </RelativeLayout>
+
+
+    <FrameLayout
+        android:id="@+id/container_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/topbar_filter">
+
+        <com.google.android.gms.ads.AdView
+            android:id="@+id/adView_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            ads:adSize="BANNER"
+            ads:adUnitId="@string/admob_banner_ad"></com.google.android.gms.ads.AdView>
+
+
+    </FrameLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/container_img"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottombar"
+        android:layout_below="@+id/container_filter"
+        android:layout_centerInParent="true"
+        android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/img_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/container_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
+
+        <bsoft.com.lib_filter.filter.indicators.AVLoadingIndicatorView
+            android:id="@+id/indicator"
+            style="@style/AVLoadingIndicatorView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone"
+            app:indicatorColor="#f51c14"
+            app:indicatorName="BallPulseIndicator" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/bottombar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/filter_color_bottom_menu"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycle_filter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/xx_small"
+            android:layout_marginTop="@dimen/xx_small"></android.support.v7.widget.RecyclerView>
+    </RelativeLayout>
+</RelativeLayout>

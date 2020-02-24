@@ -1,0 +1,1520 @@
+package com.photo.gallery.activities;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.SystemClock;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MotionEventCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+
+import com.isseiaoki.simplecropview.CropImageView;
+import com.photo.gallery.callback.OnDialogEventListener;
+import com.photo.gallery.R;
+import com.photo.gallery.fragments.options.BaseOptFragment;
+import com.photo.gallery.fragments.options.CropFragment;
+import com.photo.gallery.fragments.options.IconStickerFragment;
+import com.photo.gallery.fragments.options.MenuFragment;
+import com.photo.gallery.fragments.options.PipFragment;
+import com.photo.gallery.fragments.options.SplashFragment;
+import com.photo.gallery.models.FileItem;
+import com.photo.gallery.models.options.PipEntity;
+import com.photo.gallery.ui.options.FixedCropImageView;
+import com.photo.gallery.ui.options.splash.SplashShapeView;
+import com.photo.gallery.utils.ConstValue;
+import com.photo.gallery.utils.DateUtils;
+import com.photo.gallery.utils.FileUtil;
+import com.photo.gallery.utils.Flog;
+import com.photo.gallery.utils.ResizeImage;
+import com.photo.gallery.utils.SharedPrefUtil;
+import com.photo.gallery.utils.Utils;
+import com.photo.gallery.utils.options.FastBlurFilter;
+import com.photo.gallery.utils.options.PIPUtility;
+import com.photo.gallery.utils.options.UtilityPip;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import bsoft.com.lib_filter.filter.FilterFragment;
+import bsoft.com.lib_filter.filter.gpu.util.BitmapUtil;
+import bsoft.healthy.tracker.menstrual.lib_sticker.fragments.TextStickerFragment;
+import bsoft.healthy.tracker.menstrual.lib_sticker.main.BaseStickerView;
+import bsoft.healthy.tracker.menstrual.lib_sticker.main.IconStickerView;
+import bsoft.healthy.tracker.menstrual.lib_sticker.main.StickerContainerView;
+import bsoft.healthy.tracker.menstrual.lib_sticker.main.TextStickerView;
+
+/**
+ * Created by Tung on 3/30/2018.
+ */
+
+public class EditPhotoActivity extends AppCompatActivity implements View.OnClickListener,
+        MenuFragment.OnMenuListener, SplashFragment.OnSplashListener, FilterFragment.HandleBackFilter,
+        PipFragment.OnPipListener, IconStickerFragment.OnStickerIconListener, CropFragment.OnCropListener,
+        TextStickerView.TextStickerViewListener {
+
+    public static final int INDEX_PIP = 0;
+    public static final int INDEX_PIP_FX = 1;
+    public static final int TAB_SIZE = 2;
+    public static final float BITMAP_SCALE = 0.4f;
+    private static final java.lang.String TAG = EditPhotoActivity.class.getSimpleName();
+    private static final int TOTAL_THREADS = 4;
+    private FileItem mFileItem = null;
+    private View mBtnBack, mBtnRotate, mBtnDone;
+    private ImageView mImgPhoto = null;
+    private ProgressDialog progressDialog = null;
+    private FragmentManager fm = null;
+    private int cntThread = 0;
+    private BaseOptFragment menuFrag, splashFrag, pipFrag, stickerFrag, cropFrag;
+    private TextStickerFragment textFrag;
+    private int curFragID = -1;
+    private ViewGroup mViewSplashContainer, mViewPipContainer;
+    private StickerContainerView mViewIconStickerContainer;
+    private StickerContainerView mViewTextStickerContainer;
+    private Bitmap mBitmapSplash, mFinalBitmap;
+    private int mCurSplashShape;
+    private SplashShapeView mSplashShapeView;
+    private long mLastClickTime = 0;
+    private int measuredHeight;
+    private int measuredWidth;
+    private float topOffset;
+    private float totalOffset;
+    private int pipCurrentIndex;
+    private ArrayList<PipEntity> myDataset;
+    private PipView pipView;
+    private Matrix matrixBitmap;
+    private Bitmap bitmapShade;
+    private Bitmap bitmapMask;
+    private Bitmap bitmapSource;
+    private Bitmap bitmapBlur;
+    private Matrix matrixBlur;
+    private Matrix matrixBubble;
+    private Matrix matrixMask;
+    private int filterMode = 0;
+    private Bitmap filterSource, filterBlur;
+    private int mImageViewWidth, mImageViewHeight;
+    private FixedCropImageView mViewCropContainer = null;
+
+    public static Bitmap createCroppedScaledBitmap(Bitmap src, int left, int top, int w, int h, boolean filter) {
+        Matrix m = new Matrix();
+        m.setScale(BITMAP_SCALE, BITMAP_SCALE);
+        m.postTranslate(((float) (-left)) * BITMAP_SCALE, ((float) (-top)) * BITMAP_SCALE);
+        int width = (int) (((float) w) * BITMAP_SCALE);
+        int height = (int) (((float) h) * BITMAP_SCALE);
+        if (width <= 0) {
+            width = INDEX_PIP_FX;
+        }
+        if (height <= 0) {
+            height = INDEX_PIP_FX;
+        }
+        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(result);
+        Paint paint = new Paint();
+        paint.setFilterBitmap(filter);
+        canvas.drawBitmap(src, m, paint);
+        return result;
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        getData();
+
+        if (mFileItem == null) {
+            toastEditFailed();
+            return;
+        }
+
+        setContentView(R.layout.activity_edit_photo);
+
+        applyColor();
+        initDialog();
+        initViews();
+        setValues();
+        addFrags();
+    }
+
+    public void applyColor() {
+        int defaultPrimary = ContextCompat.getColor(this, R.color.colorPrimary);
+        int colorPrimary = SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, defaultPrimary);
+        int colorPrimaryDark = Utils.getColorDarker(colorPrimary);
+        boolean isDarkTheme = Utils.isColorDark(colorPrimary);
+        Utils.setConstractStatusBar(this, isDarkTheme);
+        Utils.setColorStatusBar(this, colorPrimaryDark);
+    }
+
+    private void initDialog() {
+        progressDialog = new ProgressDialog(this);
+
+    }
+
+    private void showDialog() {
+        if (progressDialog != null) {
+            progressDialog.show();
+        }
+    }
+
+    private void hideDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    private void setValues() {
+        mBtnBack.setOnClickListener(this);
+        mBtnRotate.setOnClickListener(this);
+        mBtnDone.setOnClickListener(this);
+
+        showDialog();
+
+
+        new DecodeImageAsync(this).execute(mFileItem.path);
+    }
+
+    private void addViewSplash(Bitmap bitmap) {
+
+        BitmapUtil.ourBitmapRecycle(mBitmapSplash, false);
+        mBitmapSplash = bitmap;
+        mSplashShapeView = new SplashShapeView(this);
+
+        mSplashShapeView.loadSplashShape(1);
+        mSplashShapeView.setImageBitmap(mBitmapSplash, 1);
+        FrameLayout.LayoutParams ly = new FrameLayout.LayoutParams(mImageViewWidth, mImageViewHeight);
+        ly.gravity = Gravity.CENTER;
+
+        if (mViewSplashContainer != null) {
+            mViewSplashContainer.removeAllViews();
+            mViewSplashContainer.addView(mSplashShapeView, ly);
+        }
+    }
+
+    @Override
+    public void onOpenSplash() {
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_SPLASH);
+    }
+
+    @Override
+    public void onOpenFilter() {
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_FILTER);
+        FilterFragment filterFragment = FilterFragment.newInstance(mFinalBitmap, this);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.recycler_view_container, filterFragment)
+                .addToBackStack("FilterFragment")
+                .commit();
+    }
+
+    @Override
+    public void onOpenPip() {
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_PIP);
+    }
+
+    @Override
+    public void onOpenSticker() {
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_ICON_STICKER);
+    }
+
+    @Override
+    public void onOpenText() {
+        Intent intent = new Intent(EditPhotoActivity.this, TextInputActivity.class);
+        intent.putExtra(ConstValue.EXTRA_STATUS_TEXT_EDIT_INPUT, TextInputActivity.STATUS_NEW_TEXT_INPUT);
+        startActivityForResult(intent, ConstValue.REQUEST_CODE_TEXT_INPUTED);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Flog.d(TAG, "resultCode_3=" + resultCode);
+        if (data == null)
+            return;
+
+        if (resultCode == RESULT_OK && requestCode == ConstValue.REQUEST_CODE_TEXT_INPUTED) {
+
+            handleTextInputed(data);
+
+        }
+    }
+
+    private void handleTextInputed(Intent data) {
+        String inputed = data.getStringExtra(ConstValue.EXTRA_TEXT_INPUTED);
+        int statusTextEditInput = data.getIntExtra(ConstValue.EXTRA_STATUS_TEXT_EDIT_INPUT, -1);
+        Flog.d(TAG, "inputed_3=" + inputed);
+        if (statusTextEditInput == TextInputActivity.STATUS_NEW_TEXT_INPUT) {
+            if (inputed == null || inputed.isEmpty())
+                return;
+
+            Flog.d("addStickerTextFragment_3");
+
+            textFrag.resetSeekbar();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_TEXT);
+
+            addTextStickerView(inputed);
+
+        } else if (statusTextEditInput == TextInputActivity.STATUS_EDIT_TEXT_INPUT) {
+
+            BaseStickerView stickerView = mViewTextStickerContainer.getCurItem();
+            if (!(stickerView instanceof TextStickerView)) {
+                return;
+            }
+
+            ((TextStickerView) stickerView).setText(inputed);
+        }
+    }
+
+    private void addTextStickerView(String text) {
+        showDialog();
+
+        Flog.d(TAG, "addTextStickerView: w=" + mImageViewWidth + "_h=" + mImageViewHeight);
+        TextStickerView itemText = new TextStickerView(mViewTextStickerContainer, mImageViewWidth, mImageViewHeight)
+                .setListener(this);
+        itemText.setText(text);
+        mViewTextStickerContainer.reset();
+        mViewTextStickerContainer.addItem(itemText);
+        mViewTextStickerContainer.invalidate();
+
+        hideDialog();
+    }
+
+    @Override
+    public void onOpenCrop() {
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_CROP);
+    }
+
+    @Override
+    public void onSplashFragmentReady() {
+
+        if (cntThread == TOTAL_THREADS) {
+            return;
+        }
+
+
+        ((SplashFragment) splashFrag).initData();
+
+        cntThread++;
+        if (cntThread == TOTAL_THREADS) {
+            onAllThreadFinished();
+        }
+    }
+
+    @Override
+    public void onItemSplashClickListener(int prevPos, int position) {
+        mCurSplashShape = position + 1;
+        Flog.d("mCurSplashShape  ", "11111" + mCurSplashShape);
+        mSplashShapeView.loadSplashShape(mCurSplashShape);
+    }
+
+    @Override
+    public void onChangeClickListener(int position) {
+        int currrentpos = position + 1;
+        Flog.d("onChangeClickListener " + mCurSplashShape);
+        mSplashShapeView.loadSplashShape(currrentpos);
+    }
+
+    @Override
+    public void onStypeClickListener(SplashShapeView.StyleMode btnMode) {
+        Flog.d("StyleBtnMode " + btnMode);
+        mSplashShapeView.setStyleMode(btnMode);
+    }
+
+    private void onAllThreadFinished() {
+        Flog.d(TAG, "onAllThreadFinished");
+        hideDialog();
+    }
+
+    private void onPhotoLoaded(Bitmap bitmap) {
+
+        if (bitmap == null) {
+            toastEditFailed();
+            return;
+        }
+
+        if (cntThread == TOTAL_THREADS) {
+            return;
+        }
+
+        syncBitmapToAll(bitmap);
+
+        cntThread++;
+        if (cntThread == TOTAL_THREADS) {
+            onAllThreadFinished();
+        }
+    }
+
+    private void initViews() {
+
+        mBtnBack = findViewById(R.id.btn_back);
+        mBtnRotate = findViewById(R.id.btn_rotate);
+        mBtnDone = findViewById(R.id.btn_done);
+
+        mImgPhoto = (ImageView) findViewById(R.id.iv_photo);
+
+        mViewSplashContainer = (FrameLayout) findViewById(R.id.splash_container);
+        mViewPipContainer = (RelativeLayout) findViewById(R.id.pip_container);
+        mViewIconStickerContainer = (StickerContainerView) findViewById(R.id.icon_sticker_container);
+        mViewTextStickerContainer = (StickerContainerView) findViewById(R.id.text_sticker_container);
+        mViewCropContainer = (FixedCropImageView) findViewById(R.id.cropImageView);
+    }
+
+    private void getData() {
+
+        if (getIntent() == null) {
+            toastEditFailed();
+            return;
+        }
+
+        mFileItem = getIntent().getParcelableExtra(ConstValue.EXTRA_FILE_ITEM_TO_EDIT);
+    }
+
+    private void toastEditFailed() {
+        Toast.makeText(this, getString(R.string.cannot_edit_photo), Toast.LENGTH_LONG).show();
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        Flog.d("onDestroyView editphoto");
+        try {
+            mSplashShapeView.destroy();
+            BitmapUtil.free(mBitmapSplash);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch (id) {
+            case R.id.btn_back:
+                actionBack();
+                break;
+            case R.id.btn_rotate:
+                actionRotate();
+                break;
+            case R.id.btn_done:
+                actionDone();
+                break;
+        }
+    }
+
+    private void actionDone() {
+
+        // mis-clicking prevention, using threshold of 1000 ms
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+        // do your magic here
+
+        if (curFragID == BaseOptFragment.FRAGMENT_OPT_SPLASH) {
+            // save splash.
+            showDialog();
+            saveEffectSplash();
+            hideDialog();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+        } else if (curFragID == BaseOptFragment.FRAGMENT_OPT_ICON_STICKER) {
+            // save sticker icons.
+            showDialog();
+            saveStickerIcons();
+            hideDialog();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+        } else if (curFragID == BaseOptFragment.FRAGMENT_OPT_TEXT) {
+            // save sticker texts.
+            showDialog();
+            saveStickerTexts();
+            hideDialog();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+        } else if (curFragID == BaseOptFragment.FRAGMENT_OPT_PIP) {
+            // save pip.
+            showDialog();
+            saveEffectPip();
+            hideDialog();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+        } else if (curFragID == BaseOptFragment.FRAGMENT_OPT_CROP) {
+            // save crop.
+            showDialog();
+            saveEffectCrop();
+            hideDialog();
+            showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+        } else {
+            showSaveDialog(this, new OnDialogEventListener() {
+                @Override
+                public void onOk() {
+
+//                    Uri uri = FileUtil.insert(EditPhotoActivity.this, mFileItem, mFinalBitmap);
+//                    String savedPath = FileUtil.getRealPathFromURI(EditPhotoActivity.this, uri);
+//                    FileUtil.scanMediaStore(EditPhotoActivity.this, mFileItem.path, savedPath);
+
+                    String dstSavedDir = Environment.getExternalStorageDirectory().getAbsolutePath()
+                            + File.separator + ConstValue.APP_FOLDER + File.separator;
+                    String dstPath = dstSavedDir + mFileItem.name + "_"
+                            + DateUtils.getDate(System.currentTimeMillis(), DateUtils.FORMAT_DATE_2)
+                            + FileUtil.getExtension(mFileItem.path);
+                    Flog.d(TAG, "dstPath123="+dstPath);
+                    try {
+                        FileUtil.insert(EditPhotoActivity.this, mFileItem, mFinalBitmap, dstPath);
+
+                        FileUtil.scanMediaStore(EditPhotoActivity.this, dstPath);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    Intent intent = new Intent();
+                    intent.putExtra(ConstValue.EXTRA_FILE_ITEM_EDIITED, "aaa");
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+            });
+        }
+    }
+
+    private void saveStickerTexts() {
+
+        mViewTextStickerContainer.unSelectAllComponent();
+
+        Bitmap bmp = Bitmap.createBitmap(mImageViewWidth, mImageViewHeight, Bitmap.Config.ARGB_8888);
+        mViewTextStickerContainer.draw(new Canvas(bmp));
+
+        syncBitmapToAll(bmp);
+
+        mViewTextStickerContainer.reset();
+    }
+
+    private void saveEffectCrop() {
+        Bitmap bitmap = mViewCropContainer.getCroppedBitmap();
+        if (bitmap == null || bitmap.isRecycled()) {
+            toastEditFailed();
+            return;
+        }
+
+        syncSizeView(bitmap);
+        try {
+            bitmap = Bitmap.createScaledBitmap(bitmap, mImageViewWidth, mImageViewHeight, true);
+        } catch (OutOfMemoryError oom) {
+            oom.printStackTrace();
+            bitmap = null;
+        }
+
+        if (bitmap == null || bitmap.isRecycled()) {
+            toastEditFailed();
+            return;
+        }
+
+        syncBitmapToAll(bitmap);
+    }
+
+    private void saveEffectPip() {
+        Bitmap bmp = Bitmap.createBitmap(measuredWidth, measuredWidth, Bitmap.Config.ARGB_8888);
+        pipView.draw(new Canvas(bmp));
+
+        syncBitmapToAll(bmp);
+    }
+
+    private void saveStickerIcons() {
+
+        mViewIconStickerContainer.unSelectAllComponent();
+
+        Bitmap bmp = Bitmap.createBitmap(mImageViewWidth, mImageViewHeight, Bitmap.Config.ARGB_8888);
+        mViewIconStickerContainer.draw(new Canvas(bmp));
+
+        syncBitmapToAll(bmp);
+
+        mViewIconStickerContainer.reset();
+    }
+
+    private void saveEffectSplash() {
+        Bitmap bmp = Bitmap.createBitmap(mBitmapSplash.getWidth(), mBitmapSplash.getHeight(), Bitmap.Config.ARGB_8888);
+        mSplashShapeView.drawImage(new Canvas(bmp));
+
+        syncBitmapToAll(bmp);
+    }
+
+    private void syncSizeView(Bitmap srcBmp) {
+        int width = Utils.getScreenSize(this)[0];
+        int height = width;
+
+        int srcWidth = srcBmp.getWidth();
+        int srcHeight = srcBmp.getHeight();
+
+        float scaleX = width * 1F / srcWidth;
+        float scaleY = height * 1F / srcHeight;
+        float scaleFitScreen = Math.min(scaleX, scaleY);
+
+        int newWidth = (int) (srcWidth * scaleFitScreen);
+        int newHeight = (int) (srcHeight * scaleFitScreen);
+
+        mImageViewWidth = newWidth;
+        mImageViewHeight = newHeight;
+        Flog.d(TAG, "_Imageview: w=" + mImageViewWidth + "_h=" + mImageViewHeight);
+    }
+
+    private void syncBitmapToAll(Bitmap bmp) {
+
+        syncSizeView(bmp);
+
+        BitmapUtil.free(mFinalBitmap);
+        mFinalBitmap = bmp;
+
+        mImgPhoto.setImageBitmap(null);
+        mImgPhoto.setImageBitmap(bmp);
+
+        addViewSplash(bmp);
+        addViewPip(bmp);
+        addViewIconSticker(bmp);
+        addViewTextSticker(bmp);
+        addViewCrop(bmp);
+    }
+
+    private void addViewCrop(Bitmap bitmap) {
+
+        if (mViewCropContainer != null) {
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mViewCropContainer.getLayoutParams();
+//            params.width = mImageViewWidth;
+            params.height = mImageViewHeight;
+            mViewCropContainer.requestLayout();
+            mViewCropContainer.setImageBitmap(bitmap);
+            mViewCropContainer.setCropMode(CropImageView.CropMode.FREE);
+        }
+
+    }
+
+    private void addViewIconSticker(Bitmap bitmap) {
+
+        Bitmap stickerBmp = bitmap;
+        if (mViewIconStickerContainer != null) {
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mViewIconStickerContainer.getLayoutParams();
+            params.width = mImageViewWidth;
+            params.height = mImageViewHeight;
+            mViewIconStickerContainer.requestLayout();
+
+            mViewIconStickerContainer.setBitmap(stickerBmp, mImageViewWidth, mImageViewHeight);
+            mViewIconStickerContainer.invalidate();
+        }
+
+    }
+
+    private void addViewTextSticker(Bitmap bitmap) {
+
+        Bitmap stickerBmp = bitmap;
+        if (mViewTextStickerContainer != null) {
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mViewTextStickerContainer.getLayoutParams();
+            params.width = mImageViewWidth;
+            params.height = mImageViewHeight;
+            mViewTextStickerContainer.requestLayout();
+
+            mViewTextStickerContainer.setBitmap(stickerBmp, mImageViewWidth, mImageViewHeight);
+            mViewTextStickerContainer.invalidate();
+        }
+
+    }
+
+    private void addViewPip(Bitmap bitmapSource) {
+        BitmapUtil.ourBitmapRecycle(this.bitmapSource, false);
+        this.bitmapSource = bitmapSource;
+        createBlurBitmap(bitmapSource);
+
+        pipCurrentIndex = 1;
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        topOffset = metrics.density * 92.0f;
+        totalOffset = metrics.density * 140.0f;
+
+        measuredWidth = Utils.getScreenSize(this)[0];
+        measuredHeight = Utils.getScreenSize(this)[1];
+
+        Flog.d("bitmapSource ", " " + bitmapSource);
+        updateCurrentIndex(pipCurrentIndex);
+        RelativeLayout.LayoutParams layoutParams =
+                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.width = measuredWidth;
+        layoutParams.height = measuredWidth;
+//        layoutParams.addRule(13, -1);
+        pipView = new PipView(this);
+
+        if (mViewPipContainer != null) {
+            mViewPipContainer.removeAllViews();
+            mViewPipContainer.addView(pipView, layoutParams);
+        }
+    }
+
+    public void createBlurBitmap(Bitmap sourceBitmap) {
+        Bitmap outputBitmap;
+        int blurRadius = Math.round(9.0f * ((float) Math.sqrt((double) (((float) (sourceBitmap.getWidth() * sourceBitmap.getWidth())) / 1000000.0f))));
+        if (blurRadius < TAB_SIZE) {
+            blurRadius = TAB_SIZE;
+        }
+        if (sourceBitmap.getWidth() > sourceBitmap.getHeight()) {
+            outputBitmap = createCroppedScaledBitmap(sourceBitmap, (sourceBitmap.getWidth() / TAB_SIZE) - (sourceBitmap.getHeight() / TAB_SIZE), INDEX_PIP, sourceBitmap.getHeight(), sourceBitmap.getHeight(), false);
+        } else {
+            outputBitmap = createCroppedScaledBitmap(sourceBitmap, INDEX_PIP, (sourceBitmap.getHeight() / TAB_SIZE) - (sourceBitmap.getWidth() / TAB_SIZE), sourceBitmap.getWidth(), sourceBitmap.getWidth(), false);
+        }
+//        EffectFragment.functionToBlur(outputBitmap, blurRadius);
+//        bitmapBlur = createBlurBitmapNDK(outputBitmap, 0, 15);
+
+        bitmapBlur = FastBlurFilter.blur(outputBitmap, 5, true);
+        Flog.d("bitmapBlur ", " " + bitmapBlur);
+    }
+
+    private void updateCurrentIndex(int index) {
+        Flog.d("updateCurrentIndex ", "11111");
+        if (index < 0) {
+            index = INDEX_PIP;
+        }
+        if (index == 0) {
+            pipCurrentIndex = index;
+            if (pipView != null) {
+                pipView.setMatrices();
+                pipView.invalidate();
+            }
+        }
+        if (index > myDataset.size() - 1) {
+            index = myDataset.size() - 1;
+        }
+        pipCurrentIndex = index;
+        if (bitmapShade != null) {
+            bitmapShade.recycle();
+        }
+
+        bitmapShade = BitmapFactory.decodeResource(getResources(), myDataset.get(pipCurrentIndex).shadeId);
+
+        Flog.d("bitmapShade ", " " + bitmapShade);
+        if (bitmapMask != null) {
+            bitmapMask.recycle();
+        }
+        bitmapMask = loadMaskBitmap2(myDataset.get(pipCurrentIndex).maskId);
+        Flog.d("bitmapMask ", " " + bitmapMask);
+
+        if (pipView != null) {
+            pipView.setMatrices();
+            pipView.invalidate();
+        }
+        PIPUtility.logFreeMemory(this);
+    }
+
+    Bitmap loadMaskBitmap2(int resId) {
+        return convertToAlphaMask(BitmapFactory.decodeResource(getResources(), resId));
+    }
+
+    private Bitmap convertToAlphaMask(Bitmap b) {
+        Bitmap a = Bitmap.createBitmap(b.getWidth(), b.getHeight(), Bitmap.Config.ALPHA_8);
+        new Canvas(a).drawBitmap(b, 0.0f, 0.0f, null);
+        b.recycle();
+        return a;
+    }
+
+    private void showSaveDialog(final Context context, final OnDialogEventListener listener, final FileItem... fileItem) {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(context);
+        String title = context.getString(R.string.save_photo);
+        String message = context.getString(R.string.confirm_save_to_storage_dialog);
+        alert.setTitle(title)
+                .setMessage(message)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        if (listener != null) {
+                            listener.onCancel();
+                        }
+                    }
+                })
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+                        if (listener != null) {
+                            listener.onOk();
+                        }
+                    }
+                }).show();
+    }
+
+    private void actionRotate() {
+
+        // mis-clicking prevention, using threshold of 1000 ms
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+        // do your magic here
+
+        showDialog();
+        Bitmap bitmap = rotateBmp(mFinalBitmap, mImageViewWidth, mImageViewHeight, 90);
+        syncBitmapToAll(bitmap);
+        hideDialog();
+    }
+
+    private Bitmap rotateBmp(Bitmap bitmapOrg, int width, int height, int angle) {
+        Matrix matrix = new Matrix();
+
+        matrix.postRotate(angle);
+
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmapOrg, width, height, true);
+
+        Bitmap rotatedBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+        return rotatedBitmap;
+    }
+
+
+    private void actionBack() {
+        Flog.d(TAG, "actionBack=" + curFragID);
+        switch (curFragID) {
+            case BaseOptFragment.FRAGMENT_OPT_SPLASH:
+                showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_FILTER:
+            case BaseOptFragment.FRAGMENT_OPT_PIP:
+            case BaseOptFragment.FRAGMENT_OPT_CROP:
+                backToHomeMenu();
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_TEXT:
+                if (TextStickerFragment.flag_back_opacity) {
+                    ((TextStickerFragment) textFrag).showEventTextFragment();
+                } else {
+                    backToHomeMenu();
+                }
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_ICON_STICKER:
+                if (IconStickerFragment.flag_show_details) {
+                    ((IconStickerFragment) stickerFrag).showDetails(false);
+                } else {
+                    mViewIconStickerContainer.reset();
+                    backToHomeMenu();
+                }
+                break;
+            default:
+                setResult(RESULT_CANCELED, null);
+                finish();
+                break;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        actionBack();
+    }
+
+    public void addFrags() {
+        fm = getSupportFragmentManager();
+
+        menuFrag = new MenuFragment().setListener(this);
+        splashFrag = new SplashFragment().setListener(this);
+//        filterFrag = new FilterFragment().setListener(this);
+        pipFrag = new PipFragment().setListener(this);
+        stickerFrag = new IconStickerFragment().setListener(this);
+        textFrag = new TextStickerFragment().setTextStickerContainerView(mViewTextStickerContainer);
+        int defaultPrimary = ContextCompat.getColor(this, bsoft.healthy.tracker.menstrual.lib_sticker.R.color.colorPrimary);
+        textFrag.setColorApp(SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, defaultPrimary));
+        cropFrag = new CropFragment().setListener(this);
+
+        if (size(fm) > 0) {
+            clearBackstack(fm);
+        }
+
+        addFragment(fm, menuFrag);
+        addFragment(fm, splashFrag);
+        addFragment(fm, pipFrag);
+        addFragment(fm, stickerFrag);
+        addFragment(fm, textFrag);
+        addFragment(fm, cropFrag);
+
+
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+    }
+
+    private void showOptFrag(int fragID) {
+        if (curFragID == -1) {
+            hideAllFrags();
+        } else {
+            showFragAt(curFragID, false);
+        }
+
+        showFragAt(fragID, true);
+        curFragID = fragID;
+    }
+
+    private void showFragAt(int fragID, boolean visibility) {
+        switch (fragID) {
+            case BaseOptFragment.FRAGMENT_OPT_MENU:
+                showFragment(menuFrag, visibility);
+                mImgPhoto.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                mBtnRotate.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_SPLASH:
+                showFragment(splashFrag, visibility);
+                mViewSplashContainer.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_PIP:
+                showFragment(pipFrag, visibility);
+                mViewPipContainer.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_ICON_STICKER:
+                showFragment(stickerFrag, visibility);
+                mViewIconStickerContainer.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_TEXT:
+                showFragment(textFrag, visibility);
+                mViewTextStickerContainer.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+            case BaseOptFragment.FRAGMENT_OPT_CROP:
+                showFragment(cropFrag, visibility);
+                mViewCropContainer.setVisibility(visibility ? View.VISIBLE : View.GONE);
+                break;
+        }
+    }
+
+    private void showFragment(Fragment fragment, boolean visibility) {
+        if (visibility) {
+            showFragment(fm, fragment);
+        } else {
+            hideFragment(fm, fragment);
+        }
+    }
+
+    private void hideAllFrags() {
+        hideFragment(fm, menuFrag);
+        hideFragment(fm, splashFrag);
+        hideFragment(fm, pipFrag);
+        hideFragment(fm, stickerFrag);
+        hideFragment(fm, textFrag);
+        hideFragment(fm, cropFrag);
+
+        mImgPhoto.setVisibility(View.GONE);
+        mViewSplashContainer.setVisibility(View.GONE);
+        mViewPipContainer.setVisibility(View.GONE);
+        mViewIconStickerContainer.setVisibility(View.GONE);
+        mViewTextStickerContainer.setVisibility(View.GONE);
+        mViewCropContainer.setVisibility(View.GONE);
+    }
+
+    private void addFragment(FragmentManager fm, Fragment fragment) {
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.add(R.id.recycler_view_container, fragment);
+        ft.commit();
+    }
+
+    private void showFragment(FragmentManager fm, Fragment fragment) {
+        fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .show(fragment)
+                .commit();
+    }
+
+    private void hideFragment(FragmentManager fm, Fragment fragment) {
+        fm.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                .hide(fragment)
+                .commit();
+    }
+
+    private int size(FragmentManager fm) {
+        return fm.getBackStackEntryCount();
+    }
+
+    private void clearBackstack(FragmentManager fm) {
+        fm.popBackStack(R.id.recycler_view_container, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
+
+    @Override
+    public void backPressFilter(Bitmap bitmap) {
+        syncBitmapToAll(bitmap);
+    }
+
+    @Override
+    public void onFilterExit() {
+        backToHomeMenu();
+    }
+
+    private void backToHomeMenu() {
+        getSupportFragmentManager().popBackStack();
+        showOptFrag(BaseOptFragment.FRAGMENT_OPT_MENU);
+    }
+
+    @Override
+    public void onPipFragmentReady() {
+        if (cntThread == TOTAL_THREADS) {
+            return;
+        }
+
+
+        myDataset = new ArrayList();
+
+        int length = UtilityPip.pipEntityArray.length;
+        for (int i = 1; i < length; i++) {
+            myDataset.add(UtilityPip.pipEntityArray[i]);
+        }
+        ((PipFragment) pipFrag).initData(myDataset);
+
+        cntThread++;
+        if (cntThread == TOTAL_THREADS) {
+            onAllThreadFinished();
+        }
+    }
+
+    @Override
+    public void onItemPIPClick(int position) {
+        pipCurrentIndex = position + 1;
+        updateCurrentIndex(pipCurrentIndex);
+    }
+
+    @Override
+    public void onStickerIconFragmentReady() {
+        if (cntThread == TOTAL_THREADS) {
+            return;
+        }
+
+
+        ((IconStickerFragment) stickerFrag).initData();
+
+        cntThread++;
+        if (cntThread == TOTAL_THREADS) {
+            onAllThreadFinished();
+        }
+    }
+
+    @Override
+    public void onItemStickerIconClicked(String path) {
+        addIconStickerView(path);
+    }
+
+    private void addIconStickerView(String path) {
+        showDialog();
+
+//        final ItemStickerView stickerView = new ItemStickerView(mViewIconStickerContainer);
+//        stickerView.setOnItemInteractListener(this);
+//        stickerView.setBitmap(BitmapUtil.getImageFromAssetsFile(getResources(), path));
+//        mViewIconStickerContainer.addItem(stickerView, mViewIconStickerContainer.getHeight());
+//        Statics.OPACITY = stickerView.getOpacity();
+//        mViewIconStickerContainer.invalidate();
+
+        final IconStickerView stickerView = new IconStickerView(mViewIconStickerContainer, mImageViewWidth, mImageViewHeight);
+        stickerView.setBitmap(BitmapUtil.getImageFromAssetsFile(getResources(), path));
+        mViewIconStickerContainer.addItem(stickerView);
+        mViewIconStickerContainer.invalidate();
+
+        hideDialog();
+    }
+
+
+    @Override
+    public void onTypeCropSelected(int type) {
+        cropImgByType(type);
+    }
+
+    public void cropImgByType(int position) {
+        switch (position) {
+            case 0:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.FIT_IMAGE);
+                break;
+            case 1:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.SQUARE);
+                break;
+            case 2:
+                mViewCropContainer.setCustomRatio(2, 3);
+                break;
+            case 3:
+                mViewCropContainer.setCustomRatio(3, 2);
+                break;
+            case 4:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.RATIO_3_4);
+                break;
+            case 5:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.RATIO_4_3);
+                break;
+            case 6:
+                mViewCropContainer.setCustomRatio(4, 5);
+                break;
+            case 7:
+                mViewCropContainer.setCustomRatio(5, 4);
+                break;
+            case 8:
+                mViewCropContainer.setCustomRatio(5, 7);
+                break;
+            case 9:
+                mViewCropContainer.setCustomRatio(7, 5);
+                break;
+            case 10:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.RATIO_9_16);
+                break;
+            case 11:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.RATIO_16_9);
+                break;
+            case 12:
+                mViewCropContainer.setCropMode(CropImageView.CropMode.CIRCLE);
+                break;
+        }
+    }
+
+    @Override
+    public void onInputTextSticker(int textStickerIndex) {
+        Flog.d(TAG, "onEditInputTextSticker idx=" + textStickerIndex);
+
+        BaseStickerView stickerView = mViewTextStickerContainer.getCurItem();
+        if (!(stickerView instanceof TextStickerView)) {
+            return;
+        }
+        String oldText = ((TextStickerView) stickerView).getText();
+        Flog.d(TAG, "oldText123=" + oldText);
+        Intent intent = new Intent(EditPhotoActivity.this, TextInputActivity.class);
+        intent.putExtra(ConstValue.EXTRA_CURRENT_TEXT_STICKER, oldText);
+        intent.putExtra(ConstValue.EXTRA_STATUS_TEXT_EDIT_INPUT, TextInputActivity.STATUS_EDIT_TEXT_INPUT);
+        startActivityForResult(intent, ConstValue.REQUEST_CODE_TEXT_INPUTED);
+    }
+
+    @Override
+    public void onDeleteTextSticker(int textStickerIndex) {
+        actionBack();
+    }
+
+    class PipView extends View {
+        private static final int INVALID_POINTER_ID = -1;
+        int UPPER_SIZE_LIMIT;
+        RectF bitmapRect;
+        float mLastTouchX;
+        float mLastTouchY;
+        RectF maskRect;
+        float minScale;
+        float offsetX;
+        float offsetY;
+        Paint paint;
+        Paint paintXfermode;
+        float[] pts;
+        RectF r;
+        float screenWidth;
+        boolean touchOutSide;
+        float[] values;
+        float viewHeight;
+        float viewWidth;
+        private int mActivePointerId;
+        private ScaleGestureDetector mScaleDetector;
+        private boolean isOnTouch = false;
+
+        public PipView(Context context) {
+            super(context);
+            minScale = 1.0f;
+            paint = new Paint(3);
+            paintXfermode = new Paint(3);
+            r = new RectF();
+            maskRect = new RectF();
+            mActivePointerId = INVALID_POINTER_ID;
+            touchOutSide = true;
+            pts = new float[TAB_SIZE];
+            bitmapRect = new RectF();
+            values = new float[9];
+            UPPER_SIZE_LIMIT = 1280;
+            paintXfermode.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            screenWidth = (float) measuredWidth;
+            setViewSize();
+            setMatrices();
+            mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+        }
+
+        void setViewSize() {
+            float scale = Math.min(((float) measuredWidth) / ((float) bitmapShade.getWidth()), (((float) measuredHeight) - totalOffset) / ((float) bitmapShade.getHeight()));
+            this.viewWidth = (float) measuredWidth;
+            this.viewHeight = ((float) measuredHeight) - totalOffset;
+        }
+
+        public void setMatrices() {
+            if (bitmapMask != null) {
+                if (bitmapSource != null) {
+                    if (bitmapBlur != null) {
+                        setViewSize();
+                        offsetX = (float) ((int) ((((float) measuredWidth) - viewWidth) / 2.0f));
+                        Flog.d("setMatrices ", " " + offsetX + "__" + measuredWidth + "__" + viewWidth);
+                        offsetY = (float) ((int) (topOffset + (((((float) measuredHeight) - totalOffset) - ((float) measuredWidth)) / 2.0f)));
+                        offsetY = 0;
+                        screenWidth = (float) measuredWidth;
+                        float w1 = (float) bitmapMask.getWidth();
+                        float h1 = (float) bitmapMask.getHeight();
+                        float w2 = (float) bitmapSource.getWidth();
+                        float h2 = (float) bitmapSource.getHeight();
+                        float scale = Math.max(w1 / w2, h1 / h2);
+                        if (pipCurrentIndex == 0) {
+                            float scaleSolo = Math.min(viewWidth / w2, viewHeight / h2);
+                            if (matrixBitmap == null) {
+                                matrixBitmap = new Matrix();
+                            }
+                            matrixBitmap.reset();
+                            matrixBitmap.postScale(scaleSolo, scaleSolo);
+                            float offX = (viewWidth - (w2 * scaleSolo)) / 2.0f;
+                            float offY = topOffset + ((viewHeight - (h2 * scaleSolo)) / 2.0f);
+
+                            Flog.d("offX ", " " + offX + "__" + viewWidth + "__" + scaleSolo);
+                            matrixBitmap.postTranslate(offX, offY);
+                        } else {
+                            minScale = scale;
+                            if (matrixBitmap == null) {
+                                matrixBitmap = new Matrix();
+                            }
+                            matrixBitmap.reset();
+                            matrixBitmap.postScale(scale, scale);
+                        }
+                        float ddx = (-((scale * w2) - w1)) / 2.0f;
+                        float ddy = (-((scale * h2) - h1)) / 2.0f;
+                        float w = (float) bitmapShade.getWidth();
+                        float bubbleScale = screenWidth / w;
+                        matrixBubble = new Matrix();
+                        matrixBubble.reset();
+                        matrixBubble.postScale(bubbleScale, bubbleScale);
+                        matrixBubble.postTranslate(offsetX, offsetY);
+                        w = (float) bitmapBlur.getWidth();
+                        scale = screenWidth / w;
+                        matrixBlur = new Matrix();
+                        matrixBlur.reset();
+                        matrixBlur.postScale(scale, scale);
+                        matrixBlur.postTranslate(offsetX, offsetY);
+                        matrixMask = new Matrix();
+                        matrixMask.reset();
+                        minScale *= bubbleScale;
+                        matrixMask.postScale(bubbleScale, bubbleScale);
+                        if (pipCurrentIndex != 0) {
+                            matrixBitmap.postScale(bubbleScale, bubbleScale);
+                        }
+                        float sss = screenWidth / ((float) bitmapShade.getWidth());
+                        float dx = offsetX + (((PipEntity) myDataset.get(pipCurrentIndex)).dx * sss);
+                        float dy = offsetY + (((PipEntity) myDataset.get(pipCurrentIndex)).dy * sss);
+                        Flog.d("xxxxxxxxx ", " " + sss);
+                        matrixMask.postTranslate(dx, dy);
+                        if (pipCurrentIndex != 0) {
+                            matrixBitmap.postTranslate(dx + ddx, dy + ddy);
+                        }
+                        maskRect.set(0.0f, 0.0f, (float) bitmapMask.getWidth(), (float) bitmapMask.getHeight());
+                        matrixMask.mapRect(maskRect);
+//                        checkDecoareteViewPositions(getCurrentMatrixForSticker());
+                    }
+                }
+            }
+        }
+
+        public void onDraw(Canvas canvas) {
+            drawPipBitmap(canvas);
+        }
+
+        private void drawPipBitmap(Canvas canvas) {
+            Flog.d("filterMode ", "11111 " + filterMode);
+            if (pipCurrentIndex != 0) {
+                if (!(bitmapBlur == null || bitmapBlur.isRecycled()) || filterMode == 1) {
+                    Flog.d("filterMode ", "222222 " + filterBlur);
+                    if (filterBlur == null || filterBlur.isRecycled()) {
+                        Flog.d("filterMode ", "333333 " + filterMode);
+                        canvas.drawBitmap(bitmapBlur, matrixBlur, this.paint);
+                    } else {
+                        Flog.d("filterMode ", "4444444 " + filterMode);
+                        canvas.drawBitmap(filterBlur, matrixBlur, this.paint);
+                    }
+                }
+                r.set(0.0f, 0.0f, (float) measuredWidth, (float) measuredHeight);
+                if (!(bitmapMask == null || bitmapMask.isRecycled())) {
+                    Flog.d("filterMode ", "555555 " + filterMode);
+                    int k = canvas.saveLayer(r, null, Canvas.ALL_SAVE_FLAG);
+                    canvas.drawBitmap(bitmapMask, matrixMask, this.paint);
+                    if (!(bitmapSource == null || bitmapSource.isRecycled())) {
+                        if (!(filterMode == 0 || filterMode == 2) || filterSource == null || filterSource.isRecycled()) {
+                            if (filterSource == null) {
+                                Flog.d("filterMode ", "666666 " + filterSource);
+                                canvas.drawBitmap(bitmapSource, matrixBitmap, this.paintXfermode);
+                            } else {
+                                canvas.drawBitmap(filterSource, matrixBitmap, this.paintXfermode);
+                            }
+                        } else {
+                            Flog.d("filterMode ", "777777 " + filterMode);
+                            canvas.drawBitmap(filterSource, matrixBitmap, this.paintXfermode);
+                        }
+                    }
+                    canvas.restoreToCount(k);
+                }
+                if (bitmapShade != null && !bitmapShade.isRecycled()) {
+                    canvas.drawBitmap(bitmapShade, matrixBubble, this.paint);
+                }
+            } else if (bitmapSource != null && !bitmapSource.isRecycled()) {
+                Flog.d("yyyyyyyyyy ", "1111111 ");
+                if (filterSource == null || filterSource.isRecycled() || !(filterMode == 0 || filterMode == 2)) {
+                    Flog.d("yyyyyyyyyy ", "2222222 " + bitmapSource);
+                    canvas.drawBitmap(bitmapSource, matrixBitmap, this.paint);
+                } else {
+                    canvas.drawBitmap(filterSource, matrixBitmap, this.paint);
+                }
+            }
+        }
+
+        public boolean onTouchEvent(MotionEvent ev) {
+
+            int newPointerIndex = INDEX_PIP;
+            mScaleDetector.onTouchEvent(ev);
+            int action = ev.getAction();
+            if (pipCurrentIndex == 0) {
+                return false;
+            }
+            float x;
+            float y;
+            int pointerIndex;
+            switch (action & 255) {
+                case INDEX_PIP /*0*/:
+                    x = ev.getX();
+                    y = ev.getY();
+                    mLastTouchX = x;
+                    mLastTouchY = y;
+                    mActivePointerId = ev.getPointerId(INDEX_PIP);
+                    if (x >= maskRect.left && x <= maskRect.right && y >= maskRect.top && y <= maskRect.bottom) {
+                        touchOutSide = false;
+                        break;
+                    }
+                    touchOutSide = true;
+                    break;
+                case INDEX_PIP_FX /*1*/:
+                    mActivePointerId = INVALID_POINTER_ID;
+                    break;
+                case TAB_SIZE /*2*/:
+                    if (!touchOutSide) {
+                        pointerIndex = ev.findPointerIndex(mActivePointerId);
+                        x = ev.getX(pointerIndex);
+                        y = ev.getY(pointerIndex);
+                        matrixBitmap.postTranslate(x - mLastTouchX, y - mLastTouchY);
+                        checkBoundries();
+                        mLastTouchX = x;
+                        mLastTouchY = y;
+                        invalidate();
+                        break;
+                    }
+                    return false;
+                case 3 /*3*/:
+                    mActivePointerId = INVALID_POINTER_ID;
+                    break;
+                case 6 /*6*/:
+                    pointerIndex = (MotionEventCompat.ACTION_POINTER_INDEX_MASK & action) >> 8;
+                    if (ev.getPointerId(pointerIndex) == mActivePointerId) {
+                        if (pointerIndex == 0) {
+                            newPointerIndex = INDEX_PIP_FX;
+                        }
+                        mLastTouchX = ev.getX(newPointerIndex);
+                        mLastTouchY = ev.getY(newPointerIndex);
+                        mActivePointerId = ev.getPointerId(newPointerIndex);
+                        break;
+                    }
+                    break;
+            }
+            return true;
+        }
+
+        float[] getCenterOfMask() {
+            pts[INDEX_PIP] = ((float) bitmapMask.getWidth()) / 2.0f;
+            pts[INDEX_PIP_FX] = ((float) bitmapMask.getHeight()) / 2.0f;
+            matrixMask.mapPoints(pts);
+            return pts;
+        }
+
+        private void checkBoundries() {
+            bitmapRect.set(0.0f, 0.0f, (float) bitmapSource.getWidth(), (float) bitmapSource.getHeight());
+            matrixBitmap.mapRect(bitmapRect);
+            float dx = 0.0f;
+            float dy = 0.0f;
+            if (bitmapRect.left > maskRect.left) {
+                dx = maskRect.left - bitmapRect.left;
+            }
+            if (bitmapRect.top > maskRect.top) {
+                dy = maskRect.top - bitmapRect.top;
+            }
+            if (bitmapRect.right < maskRect.right) {
+                dx = maskRect.right - bitmapRect.right;
+            }
+            if (bitmapRect.bottom < maskRect.bottom) {
+                dy = maskRect.bottom - bitmapRect.bottom;
+            }
+            matrixBitmap.postTranslate(dx, dy);
+//            checkDecoareteViewPositions(getCurrentMatrixForSticker());
+        }
+
+        private Bitmap saveBitmap() {
+            float offX;
+            float offY;
+            float btmScale;
+            Bitmap savedBitmap;
+            Canvas bitmapCanvas;
+            int upSize = PIPUtility.maxSizeForSave(EditPhotoActivity.this, (float) UPPER_SIZE_LIMIT);
+            int viewWidth = 1;
+            int viewHeight = 1;
+            float max;
+            int newBtmWidth;
+            int newBtmHeight;
+            Matrix sizeMat;
+            if (pipCurrentIndex == 0) {
+                Flog.d("bitmapSource ", " " + bitmapSource);
+                float w2 = (float) bitmapSource.getWidth();
+                float h2 = (float) bitmapSource.getHeight();
+//                float scaleSolo = Math.min(viewWidth / w2, viewHeight / h2);
+                float scaleSolo = 1;
+                offX = (viewWidth - (w2 * scaleSolo)) / 2.0f;
+                offY = topOffset + ((viewHeight - (h2 * scaleSolo)) / 2.0f);
+                viewWidth = (int) (w2 * scaleSolo);
+                viewHeight = (int) (h2 * scaleSolo);
+                max = (float) Math.max(viewHeight, viewWidth);
+                btmScale = ((float) upSize) / max;
+                newBtmWidth = (int) (((float) viewWidth) * btmScale);
+                newBtmHeight = (int) (((float) viewHeight) * btmScale);
+
+                Flog.d("ccccccc ", " " + viewHeight + "____" + btmScale);
+                Flog.d("bbbbbbbb", " " + h2 + "__" + scaleSolo + "___" + btmScale);
+                Flog.d("newBtmWidth ", " " + newBtmWidth + "__" + newBtmHeight);
+                if (newBtmWidth <= 0) {
+                    newBtmWidth = viewWidth;
+                }
+                if (newBtmHeight <= 0) {
+                    newBtmHeight = viewHeight;
+
+                }
+
+
+                savedBitmap = Bitmap.createBitmap(newBtmWidth, newBtmHeight, Bitmap.Config.ARGB_8888);
+                bitmapCanvas = new Canvas(savedBitmap);
+                sizeMat = new Matrix();
+                sizeMat.reset();
+//                sizeMat.postTranslate(-offX, -offY);
+                sizeMat.postScale(btmScale, btmScale);
+                bitmapCanvas.setMatrix(sizeMat);
+                bitmapCanvas.drawBitmap(bitmapSource, 0, 0, null);
+            } else {
+                offX = offsetX;
+                offY = offsetY;
+                viewHeight = (int) screenWidth;
+                viewWidth = (int) screenWidth;
+                max = (float) Math.max(viewHeight, viewWidth);
+                btmScale = ((float) upSize) / max;
+                newBtmWidth = (int) (((float) viewWidth) * btmScale);
+                newBtmHeight = (int) (((float) viewHeight) * btmScale);
+                if (newBtmWidth <= 0) {
+                    newBtmWidth = viewWidth;
+                }
+                if (newBtmHeight <= 0) {
+                    newBtmHeight = viewHeight;
+                }
+                savedBitmap = Bitmap.createBitmap(newBtmWidth, newBtmHeight, Bitmap.Config.ARGB_8888);
+                bitmapCanvas = new Canvas(savedBitmap);
+                sizeMat = new Matrix();
+                sizeMat.reset();
+                sizeMat.postTranslate(-offX, -offY);
+                sizeMat.postScale(btmScale, btmScale);
+                bitmapCanvas.setMatrix(sizeMat);
+                drawPipBitmap(bitmapCanvas);
+            }
+            return savedBitmap;
+        }
+
+        private Matrix fitRatioMatrix(Matrix matrix, float ratio) {
+            Matrix tmp = new Matrix(matrix);
+            float values[] = new float[9];
+            matrix.getValues(values);
+            // get old values of matrix stickers:
+//        float scale_X = values[0];
+//        float skew_X = values[1];
+            float transform_X = values[2];
+//        float skew_Y = values[3];
+//        float scale_Y = values[4];
+            float transform_Y = values[5];
+
+            // set new values for matrix stickers:
+            float newTransform_X = transform_X * ratio;
+            float newTransform_Y = transform_Y * ratio;
+            tmp.preScale(ratio, ratio);
+
+            Matrix concatMatrix = new Matrix();
+            concatMatrix.setTranslate(newTransform_X - transform_X, newTransform_Y - transform_Y);
+            tmp.postConcat(concatMatrix);
+            return tmp;
+        }
+
+        private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+            private ScaleListener() {
+            }
+
+            public boolean onScale(ScaleGestureDetector detector) {
+                float[] p;
+                float scale;
+                float mScaleFactor = detector.getScaleFactor();
+                if (detector.isInProgress()) {
+                    p = getCenterOfMask();
+                    mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+                    matrixBitmap.postScale(mScaleFactor, mScaleFactor, p[INDEX_PIP], p[INDEX_PIP_FX]);
+                    matrixBitmap.getValues(values);
+                    scale = values[INDEX_PIP];
+                } else {
+                    p = getCenterOfMask();
+                    mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+                    matrixBitmap.postScale(mScaleFactor, mScaleFactor, p[INDEX_PIP], p[INDEX_PIP_FX]);
+                    matrixBitmap.getValues(values);
+                    scale = values[INDEX_PIP];
+                }
+                if (scale < minScale) {
+                    matrixBitmap.postScale(minScale / scale, minScale / scale, p[INDEX_PIP], p[INDEX_PIP_FX]);
+                }
+                checkBoundries();
+                invalidate();
+                return true;
+            }
+        }
+    }
+
+    private class DecodeImageAsync extends AsyncTask<String, Void, Bitmap> {
+
+        private Context mContext = null;
+
+        public DecodeImageAsync(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            String path = strings[0];
+            if (path == null || !new File(path).exists()) {
+                return null;
+            }
+
+            int widthScreen = Utils.getScreenSize(mContext)[0];
+            if (widthScreen <= 0) {
+                return null;
+            }
+            return new ResizeImage(mContext).getBitmap(path, widthScreen);
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            onPhotoLoaded(bitmap);
+        }
+    }
+}

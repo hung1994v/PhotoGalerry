@@ -1,0 +1,27 @@
+package bsoft.healthy.tracker.menstrual.lib_sticker.fragments;
+
+import android.content.Context;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+
+/**
+ * Created by Tung on 4/4/2018.
+ */
+
+public class BaseStickerFragment extends Fragment {
+
+    private static final String TAG = BaseStickerFragment.class.getSimpleName();
+
+    protected FragmentActivity mContext;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = (FragmentActivity) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_text_input_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <RelativeLayout
+        android:id="@+id/top_menu"
+        android:background="@android:color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/btn_clear_text"
+            android:paddingTop="@dimen/margin_normal_size"
+            android:paddingBottom="@dimen/margin_normal_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/clear"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/font_size_large" />
+
+        <TextView
+            android:id="@+id/btn_ok"
+            android:paddingTop="@dimen/margin_normal_size"
+            android:paddingBottom="@dimen/margin_normal_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="@string/ok"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/font_size_large" />
+
+        <View
+            android:id="@+id/line_separate"
+            android:layout_width="1dp"
+            android:layout_height="@dimen/font_size_large"
+            android:background="@android:color/black"
+            android:layout_toLeftOf="@id/btn_ok"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"/>
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:paddingTop="@dimen/margin_normal_size"
+            android:paddingBottom="@dimen/margin_normal_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/line_separate"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:text="@string/cancel"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/font_size_large" />
+    </RelativeLayout>
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/ed_input"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/icon_size_huge"
+        android:textColor="@android:color/black"
+        android:textSize="@dimen/font_size_large"
+        android:layout_centerHorizontal="true" />
+</RelativeLayout>

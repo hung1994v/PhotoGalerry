@@ -1,0 +1,232 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:background="#121212"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/crop_topbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_65sdp"
+        android:layout_alignParentTop="true"
+        android:background="@color/color_bottom_menu">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:layout_alignParentLeft="true">
+            <ImageView
+                android:id="@+id/btn_back"
+                style="@style/GeneralButtonStyle"
+                android:layout_marginLeft="@dimen/margin_small_size"
+                android:src="@drawable/ic_back"
+                />
+            <TextView
+                android:textColor="@color/white"
+                android:id="@+id/tv_title"
+                android:layout_width="wrap_content"
+                android:layout_marginLeft="@dimen/margin_small_size"
+                android:gravity="center_vertical"
+                android:text="@string/edit"
+                android:textSize="@dimen/_13ssp"
+                android:layout_height="wrap_content"/>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/btn_crop_done"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:layout_alignParentRight="true">
+
+            <TextView
+                android:layout_marginRight="@dimen/_10sdp"
+                style="@style/TextViewSave"
+                android:gravity="center_vertical"
+                android:textSize="@dimen/_13ssp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textColor="@color/white"
+                android:text="@string/save" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </RelativeLayout>
+
+    <com.isseiaoki.simplecropview.CropImageView
+        android:id="@+id/cropImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/crop_bottom"
+        android:layout_below="@+id/crop_topbar"
+        android:padding="@dimen/x_large"
+        custom:scv_background_color="#121212"
+        custom:scv_crop_mode="fit_image"
+        custom:scv_frame_color="@color/white"
+        custom:scv_frame_stroke_weight="1dp"
+        custom:scv_guide_color="@color/white"
+        custom:scv_guide_show_mode="show_always"
+        custom:scv_guide_stroke_weight="1dp"
+        custom:scv_handle_color="@color/white"
+        custom:scv_handle_show_mode="show_always"
+        custom:scv_handle_size="14dp"
+        custom:scv_min_frame_size="50dp"
+        custom:scv_overlay_color="@color/colo_crop_overlay"
+        custom:scv_touch_padding="8dp" />
+
+    <LinearLayout
+        android:id="@+id/crop_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/color_bottom_menu"
+        android:orientation="vertical">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/buttonFitImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/fix" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button1_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_1_1" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button2_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_2_3" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button3_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_3_2" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button3_4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="3:4" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button4_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="4:3" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button4_5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_4_5" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button5_4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_5_4" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button5_7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/crop_5_7" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button7_5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="7:5" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button9_16"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="9:16" />
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/button16_9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="16:9" />
+
+
+                <Button
+                    android:textColor="@color/white"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:id="@+id/buttonCircle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="CIRCLE" />
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+
+    </LinearLayout>
+
+
+</RelativeLayout>

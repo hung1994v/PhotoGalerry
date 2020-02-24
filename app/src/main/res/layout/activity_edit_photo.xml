@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/edit_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/s_black"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:background="@color/s_black"
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_65sdp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:tint="@color/white"
+            android:id="@+id/btn_back"
+            style="@style/GeneralButtonStyle"
+            android:layout_marginLeft="@dimen/margin_small_size"
+            android:src="@drawable/ic_back"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+            app:layout_constraintLeft_toLeftOf="@+id/toolbar"
+            app:layout_constraintTop_toTopOf="@+id/toolbar" />
+
+        <TextView
+            android:visibility="invisible"
+            android:textColor="@color/white"
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginLeft="@dimen/margin_small_size"
+            android:gravity="center_vertical"
+            android:text="@string/edit"
+            android:textSize="@dimen/_13ssp"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+            app:layout_constraintLeft_toRightOf="@+id/btn_back"
+            app:layout_constraintRight_toLeftOf="@+id/btn_done"
+            app:layout_constraintTop_toTopOf="@+id/toolbar" />
+
+        <TextView
+            android:layout_marginRight="@dimen/_10sdp"
+            style="@style/TextViewSave"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/_13ssp"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:textColor="@color/white"
+            android:text="@string/save"
+            android:id="@+id/btn_done"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+            app:layout_constraintRight_toRightOf="@+id/toolbar"
+            app:layout_constraintTop_toTopOf="@+id/toolbar"
+            android:layout_marginEnd="@dimen/_10sdp" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <RelativeLayout
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/recycler_view_container"
+        >
+
+        <ImageView
+            android:id="@+id/iv_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"/>
+
+        <FrameLayout
+            android:id="@+id/splash_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"/>
+
+<!--        <RelativeLayout-->
+<!--            android:id="@+id/pip_container"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_centerInParent="true" />-->
+
+        <bsoft.healthy.tracker.menstrual.lib_sticker.main.StickerContainerView
+            android:id="@+id/icon_sticker_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true" />
+
+
+        <bsoft.healthy.tracker.menstrual.lib_sticker.main.StickerContainerView
+            android:id="@+id/text_sticker_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true" />
+
+<!--        <com.photo.gallery.ui.options.FixedCropImageView-->
+<!--            xmlns:custom="http://schemas.android.com/apk/res-auto"-->
+<!--            android:id="@+id/cropImageView"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            custom:scv_frame_stroke_weight="1dp"-->
+<!--            custom:scv_guide_show_mode="show_always"-->
+<!--            custom:scv_guide_stroke_weight="1dp"-->
+<!--            custom:scv_handle_show_mode="show_always"-->
+<!--            custom:scv_min_frame_size="50dp"-->
+<!--            custom:scv_touch_padding="8dp"-->
+<!--            custom:scv_crop_mode="free"-->
+<!--            custom:scv_handle_color="@color/colorAccent"-->
+<!--            custom:scv_guide_color="@color/colorAccent"-->
+<!--            custom:scv_overlay_color="@color/colorSecondary"-->
+<!--            custom:scv_frame_color="@color/colorAccent"-->
+<!--            android:layout_centerInParent="true" />-->
+    </RelativeLayout>
+    <FrameLayout
+        app:layout_constraintBottom_toTopOf="@+id/recycler_view_container"
+        android:id="@+id/bottom_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </FrameLayout>
+    <FrameLayout
+        android:id="@+id/recycler_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent" />
+    <ProgressBar
+        android:visibility="invisible"
+        android:id="@+id/progress_circular"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

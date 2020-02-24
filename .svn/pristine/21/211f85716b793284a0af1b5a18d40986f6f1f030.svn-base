@@ -1,0 +1,174 @@
+package com.photo.gallery.activities;
+
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.photo.gallery.R;
+import com.photo.gallery.models.FileItem;
+import com.photo.gallery.utils.ConstValue;
+import com.photo.gallery.utils.Flog;
+import com.photo.gallery.utils.GalleryUtil;
+import com.photo.gallery.utils.SharedPrefUtil;
+import com.photo.gallery.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+/**
+ * Created by Hoavt on 3/15/2018.
+ */
+
+public class SplashActivity extends AppCompatActivity {
+
+    private static final java.lang.String TAG = SplashActivity.class.getSimpleName();
+    private Handler mWaitHandler = new Handler();
+    private ProgressDialog progressDialog = null;
+    private InterstitialAd mInterstitialAd;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_splash);
+
+        initAdmob();
+
+//        initDialog();
+        applyColor();
+        loadFromGallery();
+    }
+
+    private void initAdmob() {
+        mInterstitialAd = new InterstitialAd(getApplicationContext());
+        mInterstitialAd.setAdUnitId(getString(R.string.full_admob));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+    }
+
+    public void applyColor() {
+        int defaultPrimary = ContextCompat.getColor(this, R.color.colorPrimary);
+        int colorPrimary = SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, defaultPrimary);
+        int colorPrimaryDark = Utils.getColorDarker(colorPrimary);
+        boolean isDarkTheme = Utils.isColorDark(colorPrimary);
+        Utils.setConstractStatusBar(this, isDarkTheme);
+        Utils.setColorStatusBar(this, colorPrimaryDark);
+    }
+
+    private void loadFromGallery() {
+
+//        showDialog();
+        mWaitHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                //The following code will execute after the 2 seconds.
+
+                try {
+                    ArrayList<FileItem> listAllFiles = new ArrayList<>();
+                    ArrayList<FileItem> listAllImgs = GalleryUtil.getAllImages(SplashActivity.this);
+                    ArrayList<FileItem> listAllVideos = GalleryUtil.getAllVideos(SplashActivity.this);
+
+
+                    ArrayList<FileItem> listAllMediaSdcard = new ArrayList<>();
+                    GalleryUtil.getAllMediaSdcard(SplashActivity.this, listAllMediaSdcard);
+                    Flog.d(TAG, "SIZE listAllMediaSdcard="+listAllMediaSdcard.size());
+                    ArrayList<FileItem> listAllImgsSdcard = new ArrayList<>();
+                    ArrayList<FileItem> listAllVideosSdcard = new ArrayList<>();
+                    for (int i = 0; i < listAllMediaSdcard.size(); i++) {
+                        FileItem item = listAllMediaSdcard.get(i);
+                        if (item.isImage) {
+                                                                                                                                                                                                                                                                                                                                                                                                                           listAllImgsSdcard.add(item);
+                        } else {
+                            listAllVideosSdcard.add(item);
+                        }
+                    }
+                    listAllImgs.addAll(listAllImgsSdcard);
+                    listAllVideos.addAll(listAllVideosSdcard);
+                    Flog.d(TAG, "SIZE SDCARD FILES="+listAllImgsSdcard.size()+"_"+listAllVideosSdcard.size()+"_"+listAllMediaSdcard.size());
+
+
+                    listAllFiles.addAll(listAllImgs);
+                    listAllFiles.addAll(listAllVideos);
+                    Flog.d(TAG, "SIZE ALL FILES=" + listAllImgs.size() + "_" + listAllVideos.size() + "_" + listAllFiles.size());
+
+                    /**
+                     * Sort all files descending based-on date-modified.
+                     * */
+                    Collections.sort(listAllFiles, new Comparator<FileItem>() {
+                        @Override
+                        public int compare(FileItem f1, FileItem f2) {
+
+                            if (f1 == null || f2 == null || f1.date_modified == null || f2.date_modified == null) {
+//                                Flog.d(TAG, "123compare = "+f1 + "_f2= "+f2);
+                                return 0;
+                            }
+
+//                            Flog.d(TAG, "cmmp: f1="+f1.date_modified+"_f2="+f2.date_modified);
+                            long v1 = Utils.parseLong(f1.date_modified);
+                            long v2 = Utils.parseLong(f2.date_modified);
+                            if (v1 == -1 || v2 == -1) {
+                                return 0;
+                            }
+
+                            int cmp = 0;
+                            if (v1 > v2) {
+                                cmp = -1;
+                            } else if (v1 < v2) {
+                                cmp = 1;
+                            }
+                            return cmp;
+                        }
+                    });
+
+
+//                    hideDialog();
+
+                    if (mInterstitialAd != null && mInterstitialAd.isLoaded()) {
+                        mInterstitialAd.show();
+                    }
+
+                    Intent intent = new Intent(getApplicationContext(), ContentActivity.class);
+                    intent.putParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES, listAllFiles);
+
+                    startActivity(intent);
+
+                    //Let's Finish Splash Activity since we don't want to open this when user press back button.
+                    finish();
+                } catch (Exception ignored) {
+//                    hideDialog();
+                    ignored.printStackTrace();
+                }
+            }
+        }, 800);  // Give a 2 seconds delay.
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        //Remove all the callbacks otherwise navigation will execute even after activity is killed or closed.
+        mWaitHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void initDialog() {
+        progressDialog = new ProgressDialog(this);
+    }
+
+    private void showDialog() {
+        if (progressDialog != null) {
+            progressDialog.show();
+        }
+    }
+
+    private void hideDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+}

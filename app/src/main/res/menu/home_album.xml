@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/search_btn"
+        android:icon="@drawable/ic_btn_search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView"
+        android:title="@string/search"
+        />
+    <item
+        android:id="@+id/favorite_album_btn"
+        android:icon="@drawable/ic_favorite_check_toolbar"
+        app:showAsAction="ifRoom"
+        android:title="@string/favourite"
+        />
+    <item
+        android:id="@+id/more_btn"
+        android:icon="@drawable/ic_more"
+        android:title="more"
+        app:showAsAction="ifRoom">
+
+        <menu>
+
+            <item
+                android:id="@+id/selectAlbum_btn"
+                android:title="@string/setting" />
+        <item
+                android:id="@+id/selectItem_folder_btn"
+                android:title="@string/select_item" />
+        </menu>
+    </item>
+</menu>

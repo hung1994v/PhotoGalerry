@@ -1,0 +1,19 @@
+package com.photo.gallery;
+
+import android.app.Application;
+
+import com.photo.gallery.utils.SharedPrefUtil;
+
+/**
+ * Created by Tung on 4/9/2018.
+ */
+
+public class MyApplication extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        SharedPrefUtil.init(getApplicationContext());
+    }
+}

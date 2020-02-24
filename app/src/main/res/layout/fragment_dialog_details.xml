@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:padding="@dimen/_10sdp"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:background="#00000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <TextView
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/creat_new_folder"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:id="@+id/date_text"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="@dimen/_12ssp"
+            android:textColor="@color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_10sdp" />
+        <EditText
+            android:layout_marginTop="@dimen/_5sdp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            app:layout_constraintTop_toBottomOf="@+id/date_text"
+            android:id="@+id/text_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:gravity="center_horizontal"
+            android:padding="@dimen/_5sdp"
+            android:textSize="@dimen/_12ssp"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:background="@drawable/bg_border"
+            android:layout_marginEnd="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_10sdp"
+            app:layout_constraintEnd_toStartOf="@+id/btn_ok"
+            android:text="@android:string/cancel"
+            android:id="@+id/btn_cancel"
+            app:layout_constraintTop_toBottomOf="@+id/text_input"
+            android:layout_width="@dimen/_60sdp"
+            android:layout_height="match_parent"/>
+        <TextView
+            android:gravity="center_horizontal"
+            android:padding="@dimen/_5sdp"
+            android:textSize="@dimen/_12ssp"
+            android:textAllCaps="true"
+            android:background="@drawable/bg_border"
+            android:textColor="@color/white"
+            android:layout_marginTop="@dimen/_10sdp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="@android:string/ok"
+            android:id="@+id/btn_ok"
+            app:layout_constraintTop_toBottomOf="@+id/text_input"
+            android:layout_width="@dimen/_60sdp"
+            android:layout_height="match_parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

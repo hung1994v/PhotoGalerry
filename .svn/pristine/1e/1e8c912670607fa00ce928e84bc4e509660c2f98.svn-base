@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:id="@+id/image_container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingRight="@dimen/margin_xxsmall_size"
+    android:paddingBottom="@dimen/margin_xxsmall_size"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/iv_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
+
+    <RelativeLayout
+        android:id="@+id/view_info_video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingRight="@dimen/margin_small_size"
+        android:paddingBottom="@dimen/margin_small_size"
+        android:background="@color/colorOverlayVideo">
+
+        <ImageView
+            android:id="@+id/iv_play_video"
+            android:layout_width="@dimen/font_size_large"
+            android:layout_height="@dimen/font_size_large"
+            android:src="@drawable/ic_play_video"
+            android:scaleType="fitXY"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"/>
+
+        <TextView
+            android:id="@+id/tv_time_video"
+            style="@style/GeneralTextView"
+            android:textSize="@dimen/font_size_small"
+            android:text="04:15"
+            android:layout_toLeftOf="@+id/iv_play_video"
+            android:layout_alignParentBottom="true"
+            android:layout_marginRight="@dimen/margin_small_size"/>
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/view_tick"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorTransparent">
+
+        <ImageView
+            android:id="@+id/iv_ticked"
+            android:layout_width="@dimen/font_size_xlarge"
+            android:layout_height="@dimen/font_size_xlarge"
+            android:src="@drawable/ic_btn_tick"
+            android:scaleType="fitXY"/>
+    </FrameLayout>
+</FrameLayout>
