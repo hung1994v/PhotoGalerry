@@ -50,6 +50,8 @@ import com.photo.gallery.utils.GalleryUtil;
 import com.photo.gallery.utils.KeyboardUtil;
 import com.photo.gallery.utils.Utils;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -246,6 +248,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
         return false;
     }
 
+
     private FileItem getFileItem() {
         FileItem fileInstance = null;
         if(listAllFiles!=null){
@@ -359,7 +362,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
 
 
                                     } else {
-                                        isRefresh = false;
+                                        isRefresh = true;
                                         FileUtil.toastFailed(mContext, getString(R.string.rename));
                                     }
 

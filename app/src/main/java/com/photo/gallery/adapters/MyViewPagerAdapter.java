@@ -17,11 +17,9 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import com.photo.gallery.fragments.AlbumsFragment;
 import com.photo.gallery.fragments.PhotoFragment;
 import com.photo.gallery.fragments.VideoFragment;
-import com.photo.gallery.fragments.VideoViewerFragment;
 import com.photo.gallery.models.AlbumItem;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.ConstValue;
-import com.photo.gallery.utils.Flog;
 
 public class MyViewPagerAdapter extends FragmentPagerAdapter implements PhotoFragment.OnPhotoListener, AlbumsFragment.OnAlbumsListener, VideoFragment.OnVideoListener {
     static final int TOTAL_TAB = 3;
@@ -129,7 +127,7 @@ public class MyViewPagerAdapter extends FragmentPagerAdapter implements PhotoFra
         void onItemInPhotoClicked(FileItem file, int numOfSelected);
 
 
-        void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles);
+        void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles, String key);
 
         void onItemAlbumLongClicked(AlbumItem album);
 
@@ -155,8 +153,8 @@ public class MyViewPagerAdapter extends FragmentPagerAdapter implements PhotoFra
 
 
     @Override
-    public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles) {
-        listener.onOpenAlbumViewer(nameAlbum, listFiles);
+    public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles, String key) {
+        listener.onOpenAlbumViewer(nameAlbum, listFiles, key);
     }
 
     @Override

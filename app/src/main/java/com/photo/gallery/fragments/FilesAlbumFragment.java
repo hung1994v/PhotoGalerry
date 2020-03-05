@@ -995,6 +995,10 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         isLongClickedEvent = longClickedEvent;
     }
 
+    public void refreshList(ArrayList<FileItem> fileItems) {
+        mAdapter.updateView(fileItems);
+    }
+
 
     public interface OnFileAlbumsListener {
         void onBackFileAlbumsFragment();

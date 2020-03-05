@@ -4,15 +4,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.FileProvider;
-import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -22,9 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.photo.gallery.BuildConfig;
 import com.photo.gallery.R;
-import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.adapters.AlbumsAdapter;
 import com.photo.gallery.callback.OnFileDialogEventListener;
 import com.photo.gallery.models.AlbumItem;
@@ -34,15 +28,12 @@ import com.photo.gallery.utils.DbUtils;
 import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
 import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_MAP;
 
 /**
@@ -188,19 +179,19 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
                 String key = indexes.get(position);
                 ArrayList<FileItem> items = mListFolders.get(key);
                 String nameAlbum = mListAlbums.get(position).name;
-                listener.onOpenAlbumViewer(nameAlbum, items);
+                listener.onOpenAlbumViewer(nameAlbum, items, key);
             }
         }
     }
 
     private void openAlbumViewer(int position, AlbumItem album) {
         mPosition = position;
-//        List<String> indexes = new ArrayList<String>(mListFolders.keySet()); // <== Set to List
-//        String key = indexes.get(position);
+        List<String> indexes = new ArrayList<String>(mListFolders.keySet()); // <== Set to List
+        String key = indexes.get(position);
         ArrayList<FileItem> items = mListFolders.get(album.alBumId);
 
         String nameAlbum = mListAlbums.get(position).name;
-        listener.onOpenAlbumViewer(nameAlbum, items);
+        listener.onOpenAlbumViewer(nameAlbum, items, key);
 
     }
     private void addFragment(Fragment fragment, boolean isAnim) {
@@ -507,7 +498,7 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
 
     public interface OnAlbumsListener {
 
-        void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles);
+        void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles, String key);
 
         void onItemAlbumLongClicked(AlbumItem album);
 

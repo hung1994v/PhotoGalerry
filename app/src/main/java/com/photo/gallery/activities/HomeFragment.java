@@ -24,7 +24,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.appcompat.app.AlertDialog;
 
-import android.os.Parcelable;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Html;
@@ -43,7 +42,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.internal.Constants;
 import com.photo.gallery.R;
 import com.photo.gallery.adapters.MyViewPagerAdapter;
 import com.photo.gallery.callback.OnDialogEventListener;
@@ -61,7 +59,6 @@ import com.photo.gallery.fragments.SelectAlbumFragment;
 import com.photo.gallery.fragments.SettingFragment;
 import com.photo.gallery.fragments.VideoFragment;
 import com.photo.gallery.fragments.VideoViewerFragment;
-import com.photo.gallery.listener.VideoFavoriteRemoveCallback;
 import com.photo.gallery.models.AlbumItem;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.taskes.GroupFilesTask;
@@ -93,7 +90,6 @@ import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_PHOTO;
 import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_VIDEO;
 import static com.photo.gallery.utils.ConstValue.ALBUM_NAME;
 import static com.photo.gallery.utils.ConstValue.COLUM_GIRD_NUMBER;
-import static com.photo.gallery.utils.ConstValue.DEFAULT_OPEN;
 import static com.photo.gallery.utils.ConstValue.DELETE;
 import static com.photo.gallery.utils.ConstValue.DETAILS;
 import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
@@ -1133,6 +1129,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
 
+
     private void handleItemClicked(FileItem file, int numOfSelected) {
         if (file == null) {
             return;
@@ -1327,7 +1324,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     private Handler handler2 = new Handler();;
 
     @Override
-    public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles) {
+    public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles, String key) {
         if (!isSearchViewClose()) {
             SearchViewClose();
         }
@@ -1344,10 +1341,12 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                         bundle.putString(ALBUM_NAME,nameAlbum);
                         filesAlbumFrag = FilesAlbumFragment.newInstance(bundle).setListener(HomeFragment.this);
                         addFragment(filesAlbumFrag, true);
+                        keyFolderClick = key;
 //            }
 //        }, 350);
 
     }
+    private String keyFolderClick = null;
 
     @Override
     public void onItemAlbumLongClicked(AlbumItem album) {
@@ -1952,9 +1951,16 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             switch (action) {
                 case REFRESH:
                     refreshGallery();
-                    getFragmentManager().popBackStack();
+                    if(filesAlbumFrag!=null){
+                        ArrayList<FileItem> items = mapAllFolders.get(keyFolderClick);
+                        Flog.d("REFRESH: ", "nameFolderClick: " + items);
+                        ((FilesAlbumFragment) filesAlbumFrag).refreshList(items);
+                    }
+//                    getFragmentManager().popBackStack();
                     break;
                 case FAVORITE:
+                    refreshGallery();
+
                     if (favouriteFragment != null) {
                         ((FavouriteFragment) favouriteFragment).refreshList();
                         Flog.d("FAVORITE","2222222");
