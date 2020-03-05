@@ -8,12 +8,18 @@
     <color name="black">#323234</color>
     <color name="s_black">#121212</color>
 
+    <color name="color_menu_app">#121212</color>
+    <color name="color_bg_app">#323234</color>
+
     <color name="colorTransparent">#7d9e9898</color>
     <color name="colorOverlayVideo">#379e9898</color>
     <color name="tabUnselectedIconColor">#b7b7b7</color>
     <color name="color_bottom_menu">#121212</color>
     <color name="colo_crop_overlay">#AA1C1C1C</color>
     <color name="color_white_alpha">#99FFFFFF</color>
+    <color name="colorWhiteTrans">#80FFFFFF</color>
+    <color name="overlay">#9AB8B4B4</color>
+    <color name="white_50">#80FFFFFF</color>
 
     <array name="color_app_picker">
 

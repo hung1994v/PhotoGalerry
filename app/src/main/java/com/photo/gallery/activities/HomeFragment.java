@@ -1,7 +1,5 @@
 package com.photo.gallery.activities;
 
-import android.Manifest;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,30 +24,32 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.appcompat.app.AlertDialog;
 
+import android.os.Parcelable;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Html;
+import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.Gravity;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.internal.Constants;
 import com.photo.gallery.R;
 import com.photo.gallery.adapters.MyViewPagerAdapter;
 import com.photo.gallery.callback.OnDialogEventListener;
 import com.photo.gallery.callback.OnFileDialogEventListener;
 import com.photo.gallery.databinding.ActivityContentBinding;
+import com.photo.gallery.exoplayer.ExoPlayerActivity;
 import com.photo.gallery.fragments.AlbumsFragment;
 import com.photo.gallery.fragments.BaseFragment;
 import com.photo.gallery.fragments.DialogCreateFolderFragment;
@@ -62,6 +61,7 @@ import com.photo.gallery.fragments.SelectAlbumFragment;
 import com.photo.gallery.fragments.SettingFragment;
 import com.photo.gallery.fragments.VideoFragment;
 import com.photo.gallery.fragments.VideoViewerFragment;
+import com.photo.gallery.listener.VideoFavoriteRemoveCallback;
 import com.photo.gallery.models.AlbumItem;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.taskes.GroupFilesTask;
@@ -73,6 +73,7 @@ import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
 import com.photo.gallery.utils.GalleryUtil;
 import com.photo.gallery.utils.KeyboardUtil;
+import com.photo.gallery.utils.SharedPrefUtil;
 import com.photo.gallery.utils.Utils;
 
 import java.io.File;
@@ -85,9 +86,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static android.app.Activity.RESULT_OK;
 import static androidx.fragment.app.FragmentPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT;
 import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_ALBUM;
 import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_PHOTO;
+import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_VIDEO;
+import static com.photo.gallery.utils.ConstValue.ALBUM_NAME;
+import static com.photo.gallery.utils.ConstValue.COLUM_GIRD_NUMBER;
+import static com.photo.gallery.utils.ConstValue.DEFAULT_OPEN;
+import static com.photo.gallery.utils.ConstValue.DELETE;
+import static com.photo.gallery.utils.ConstValue.DETAILS;
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
+import static com.photo.gallery.utils.ConstValue.NUM_OF_COLS_DAY_GRIDVIEW;
+import static com.photo.gallery.utils.ConstValue.REFRESH;
+import static com.photo.gallery.utils.ConstValue.FAVORITE;
+import static com.photo.gallery.utils.ConstValue.PLAY_VIDEO;
+import static com.photo.gallery.utils.ConstValue.RENAME;
+import static com.photo.gallery.utils.ConstValue.VIDEO_EDIT_URI_KEY;
+import static com.photo.gallery.utils.ConstValue.VIDEO_FILE_ITEM;
+import static com.photo.gallery.utils.ConstValue.VIDEO_NAME_KEY;
+import static com.photo.gallery.utils.ConstValue.VIDEO_OPEN_WITH;
 
 
 /**
@@ -107,10 +125,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     private final int TOTAL_THREADS = 1;
     private ArrayList<FileItem> listAllFiles = new ArrayList<>(), listAllImgs = new ArrayList<>(), listAllVideos = new ArrayList<>();
     private HashMap<String, ArrayList<FileItem>> mapAllFolders = new HashMap<>();
-    private Map<String, ArrayList<FileItem>> mapAllImgSections = new HashMap<>(), mapAllImgMonthSections = new HashMap<>(), mapAllFileSetions = new HashMap<>();
+    private Map<String, ArrayList<FileItem>> mapAllImgSections = new HashMap<>(), mapAllImgMonthSections = new HashMap<>(), mapAllFileSetions = new HashMap<>(), mapAllVideoMonthSections = new HashMap<>(), mapAllVideoSections = new HashMap<>();
     private ProgressDialog progressDialog = null;
     private PhotoFragment photoFragment = null;
-    private BaseFragment videoFragment = null;
+    private VideoFragment videoFragment = null;
     private AlbumsFragment albumsFragment = null;
     private BaseFragment favouriteFragment = null;
     private FilesAlbumFragment filesAlbumFrag;
@@ -130,9 +148,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     private MyViewPagerAdapter adapter;
     private boolean isToolbarShow;
     private boolean isToolbarAlbumShow;
+    private boolean isToolbarVideoShow;
     private SearchView searchView;
-    private boolean isDaySection = true;
+    private boolean isDaySection;
     private boolean isFromMain;
+    private int KEY_VIDEO_EXO = 0x1134;
 
     public static HomeFragment newInstance(ArrayList<FileItem> listAllFiles, boolean isFromMain) {
         HomeFragment fragment = new HomeFragment();
@@ -182,12 +202,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setLightStatusBar();
+        isDaySection = SharedPrefUtil.getInstance().getInt(COLUM_GIRD_NUMBER, NUM_OF_COLS_DAY_GRIDVIEW) == NUM_OF_COLS_DAY_GRIDVIEW;
         initViews(view);
         getData();
         loadAllFolders();
         intViewpage();
-//        intViewpage();
     }
 
     private String m_Text = "";
@@ -277,7 +296,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
     @Override
     public void onMoreVideoViewerFragment(FileItem fileItem) {
-        showPopupFileDialog(BaseFragment.FRAGMENT_VIDEO_VIEWER, fileItem);
+
     }
 
     @Override
@@ -327,7 +346,6 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             }
         });
 
-        initPopupMulFileDialog();
 
         if (true) {
             return;
@@ -366,7 +384,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     private void getData() {
         if (!isFromMain) {
             listAllFiles.clear();
-            listAllFiles = getActivity().getIntent().getParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES);
+            listAllFiles = getActivity().getIntent().getParcelableArrayListExtra(EXTRA_LIST_ALL_FILES);
         }
         Flog.d(TAG, "listAllFiles size=" + (listAllFiles == null ? -1 : listAllFiles.size()));
     }
@@ -667,7 +685,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                                      HashMap<String, ArrayList<FileItem>> listFolders,
                                      Map<String, ArrayList<FileItem>> listImgSections,
                                      Map<String, ArrayList<FileItem>> listVideoSections,
-                                     Map<String, ArrayList<FileItem>> listFileSections) {
+                                     Map<String, ArrayList<FileItem>> listVideoSectionsByMonth,
+                                     Map<String, ArrayList<FileItem>> listImgSectionsByMonth,
+                                     Map<String, ArrayList<FileItem>> listFileSections
+    ) {
 
         if (listFolders == null || listVideos == null || listImgs == null) {
             toastLoadGalleryFailed();
@@ -677,12 +698,16 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         listAllVideos = listVideos;
         mapAllFolders = listFolders;
         mapAllImgSections = listImgSections;
-        mapAllImgMonthSections = listVideoSections;
+        mapAllImgMonthSections = listImgSectionsByMonth;
         mapAllFileSetions = listFileSections;
+        mapAllVideoMonthSections = listVideoSectionsByMonth;
+        mapAllVideoSections = listVideoSections;
         Flog.d(TAG, "list final: imgs=" + listAllImgs.size() + "_videos=" + listAllVideos.size() + "_folders=" + mapAllFolders.size()
                 + "_imgsecs=" + mapAllImgSections.size() + "_videosecs=" + mapAllImgMonthSections.size() + "_filesecs=" + mapAllFileSetions.size());
 
         GalleryUtil.logListFolder(mapAllFolders);
+
+        // install data to fragment
         updateViewPage();
 
     }
@@ -690,6 +715,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     private void updateViewPage() {
         photoFragment = (PhotoFragment) getTab(TAB_PHOTO);
         albumsFragment = (AlbumsFragment) getTab(TAB_ALBUM);
+        videoFragment = (VideoFragment) getTab(TAB_VIDEO);
         if (photoFragment != null) {
             if (isDaySection) {
                 photoFragment.updateUI(listAllImgs, mapAllImgSections);
@@ -701,6 +727,13 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (albumsFragment != null) {
             albumsFragment.updateUI(mapAllFolders);
         }
+        if (videoFragment != null) {
+            if (isDaySection) {
+                videoFragment.updateUI(listAllVideos, mapAllVideoSections);
+            } else {
+                videoFragment.updateUI(listAllVideos, mapAllVideoMonthSections);
+            }
+        }
         hideDialog();
     }
 
@@ -709,15 +742,20 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
 //        hideDialog();
         binding.navigation.selectTabAtPosition(0);
-        adapter = new MyViewPagerAdapter(getChildFragmentManager(), BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT, listAllImgs, mapAllImgSections, mapAllFolders).setListener(this);
+        adapter = new MyViewPagerAdapter(getChildFragmentManager(), BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
+                , listAllImgs, mapAllImgSections, mapAllFolders,
+                listAllVideos, mapAllVideoSections).setListener(this);
         binding.viewpager.setAdapter(adapter);
-        binding.viewpager.setOffscreenPageLimit(2);
+        binding.viewpager.setOffscreenPageLimit(3);
         binding.viewpager.disableScroll(true);
         binding.navigation.setOnTabSelectListener(tabId -> {
             switch (tabId) {
                 case R.id.photo:
                     if (isToolbarAlbumShow) {
                         closeToolbarAlbum();
+                    }
+                    if (isToolbarVideoShow) {
+                        closeToolbarVideo();
                     }
                     binding.viewpager.setCurrentItem(TAB_PHOTO);
                     Fragment fragment = getTab(TAB_PHOTO);
@@ -728,6 +766,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                             case R.id.search_photo_btn:
                                 searchView = (SearchView) binding.toolbar.getMenu().findItem(R.id.search_photo_btn).getActionView();
                                 searchView.setQueryHint(getString(R.string.search));
+                                searchView.setMaxWidth(Integer.MAX_VALUE);
                                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                                     @Override
                                     public boolean onQueryTextSubmit(String query) {
@@ -743,7 +782,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                                 });
                                 break;
                             case R.id.favorite_photo_btn:
-                                if(!isSearchViewClose()){
+                                if (!isSearchViewClose()) {
                                     SearchViewClose();
                                 }
                                 favouriteFragment = new FavouriteFragment().setListener(this);
@@ -757,18 +796,24 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                             case R.id.selectItem_btn:
                                 KeyboardUtil.hideKeyboard(getActivity());
                                 intToolbarPhoto();
+
                                 break;
                             case R.id.monthView_btn:
                                 KeyboardUtil.hideKeyboard(getActivity());
                                 isDaySection = false;
                                 if (fragment instanceof PhotoFragment) {
+                                    SharedPrefUtil.getInstance().putInt(COLUM_GIRD_NUMBER, ConstValue.NUM_OF_COLS_MONTH_GRIDVIEW);
                                     ((PhotoFragment) fragment).updateUI(listAllImgs, mapAllImgMonthSections);
+                                    videoFragment.updateUI(listAllVideos, mapAllVideoMonthSections);
                                 }
+
                                 break;
                             case R.id.dayView_btn:
                                 KeyboardUtil.hideKeyboard(getActivity());
                                 isDaySection = true;
+                                SharedPrefUtil.getInstance().putInt(COLUM_GIRD_NUMBER, ConstValue.NUM_OF_COLS_DAY_GRIDVIEW);
                                 ((PhotoFragment) fragment).updateUI(listAllImgs, mapAllImgSections);
+                                videoFragment.updateUI(listAllVideos, mapAllVideoSections);
                                 break;
                         }
                         return false;
@@ -780,12 +825,15 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                     if (isToolbarShow) {
                         closeToolbarPhoto();
                     }
+                    if (isToolbarVideoShow) {
+                        closeToolbarVideo();
+                    }
                     binding.toolbar.getMenu().clear();
                     binding.toolbar.inflateMenu(R.menu.home_album);
                     binding.toolbar.setOnMenuItemClickListener(item -> {
                         switch (item.getItemId()) {
                             case R.id.favorite_album_btn:
-                                if(!isSearchViewClose()){
+                                if (!isSearchViewClose()) {
                                     SearchViewClose();
                                 }
                                 favouriteFragment = new FavouriteFragment().setListener(this);
@@ -794,6 +842,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                             case R.id.search_btn:
                                 searchView = (SearchView) binding.toolbar.getMenu().findItem(R.id.search_btn).getActionView();
                                 searchView.setQueryHint(getString(R.string.search));
+                                searchView.setMaxWidth(Integer.MAX_VALUE);
                                 searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                                     @Override
                                     public boolean onQueryTextSubmit(String query) {
@@ -821,10 +870,168 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                         return false;
                     });
                     break;
+                case R.id.video:
+                    binding.viewpager.setCurrentItem(TAB_VIDEO);
+                    if (isToolbarShow) {
+                        closeToolbarPhoto();
+                    }
+                    if (isToolbarAlbumShow) {
+                        closeToolbarAlbum();
+                    }
+                    binding.toolbar.getMenu().clear();
+                    binding.toolbar.inflateMenu(R.menu.home_photo);
+                    binding.toolbar.setOnMenuItemClickListener(item -> {
+                        switch (item.getItemId()) {
+                            case R.id.search_photo_btn:
+                                searchView = (SearchView) binding.toolbar.getMenu().findItem(R.id.search_photo_btn).getActionView();
+                                searchView.setQueryHint(getString(R.string.search));
+                                searchView.setMaxWidth(Integer.MAX_VALUE);
+                                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                                    @Override
+                                    public boolean onQueryTextSubmit(String query) {
+//                queryText(query);
+                                        return false;
+                                    }
+
+                                    @Override
+                                    public boolean onQueryTextChange(String newText) {
+                                        queryText(newText, TAB_VIDEO);
+                                        return false;
+                                    }
+                                });
+                                break;
+                            case R.id.favorite_photo_btn:
+                                if (!isSearchViewClose()) {
+                                    SearchViewClose();
+                                }
+                                favouriteFragment = new FavouriteFragment().setListener(this);
+                                addFragment(favouriteFragment, true);
+
+                                break;
+                            case R.id.setting_btn:
+                                KeyboardUtil.hideKeyboard(getActivity());
+                                addMainFragment(new SettingFragment());
+                                break;
+                            case R.id.selectItem_btn:
+                                KeyboardUtil.hideKeyboard(getActivity());
+                                intToolbarVideo();
+                                break;
+                            case R.id.monthView_btn:
+                                KeyboardUtil.hideKeyboard(getActivity());
+                                isDaySection = false;
+                                if (videoFragment != null) {
+                                    SharedPrefUtil.getInstance().putInt(COLUM_GIRD_NUMBER, ConstValue.NUM_OF_COLS_MONTH_GRIDVIEW);
+                                    videoFragment.updateUI(listAllVideos, mapAllVideoMonthSections);
+                                    photoFragment.updateUI(listAllImgs, mapAllImgMonthSections);
+                                }
+
+                                break;
+                            case R.id.dayView_btn:
+                                KeyboardUtil.hideKeyboard(getActivity());
+                                isDaySection = true;
+                                if (videoFragment != null) {
+                                    SharedPrefUtil.getInstance().putInt(COLUM_GIRD_NUMBER, ConstValue.NUM_OF_COLS_DAY_GRIDVIEW);
+                                    videoFragment.updateUI(listAllVideos, mapAllVideoSections);
+                                    photoFragment.updateUI(listAllImgs, mapAllImgSections);
+                                }
+
+                                break;
+                        }
+                        return false;
+                    });
+                    break;
 
             }
 
         });
+    }
+
+    private void intToolbarVideo() {
+        isToolbarVideoShow = true;
+        Fragment fragment = getTab(TAB_VIDEO);
+        if (fragment instanceof VideoFragment) {
+            setTextNumOfSelected(0);
+            ((VideoFragment) fragment).setLongClickedEvent(true);
+            binding.toolbarHideFilesEdit.setVisibility(View.VISIBLE);
+            binding.toolbarHideFilesEdit.inflateMenu(R.menu.home_edit);
+            binding.toolbarHideFilesEdit.setNavigationOnClickListener(v -> {
+                closeToolbarVideo();
+            });
+            binding.toolbarHideFilesEdit.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.share_btn:
+                            boolean shared = ((VideoFragment) fragment).shareFilesSelected();
+                            if (!shared) {
+                                showHintSelectImgsDialog(getString(R.string.share));
+                            }
+//                            closeToolbarPhoto();
+                            break;
+                        case R.id.delete_btn:
+                            ((VideoFragment) fragment).deleteFilesSelected(new OnDialogEventListener() {
+                                @Override
+                                public void onOk() {
+                                    refreshGallery();
+                                    closeToolbarVideo();
+                                }
+
+                                @Override
+                                public void onCancel() {
+
+                                }
+                            });
+                            break;
+                        case R.id.move_btn:
+                            if (!isSearchViewClose()) {
+                                KeyboardUtil.hideKeyboard(mContext, searchView);
+                            }
+                            HashMap<Integer, FileItem> mapPosChanged1 = ((VideoFragment) fragment).getListPositionChanged();
+                            ArrayList<FileItem> listPosChanged1 = getListFromMap(mapPosChanged1);
+                            if (listPosChanged1.size() <= 0) {
+                                showHintSelectImgsDialog(getString(R.string.move));
+                            } else {
+                                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged1);
+                            }
+                            break;
+                        case R.id.coppy_btn:
+                            if (!isSearchViewClose()) {
+                                KeyboardUtil.hideKeyboard(mContext, searchView);
+                            }
+                            HashMap<Integer, FileItem> mapPosChanged = ((VideoFragment) fragment).getListPositionChanged();
+                            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
+                            if (listPosChanged.size() <= 0) {
+                                showHintSelectImgsDialog(getString(R.string.copy));
+                            } else {
+                                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
+                            }
+                            break;
+                        case R.id.selectAll_btn:
+                            ((VideoFragment) fragment).selectAll();
+                            setTextNumOfSelected(listAllVideos.size());
+                            break;
+                        case R.id.unSelectAll_btn:
+                            ((VideoFragment) fragment).unselectAll();
+                            setTextNumOfSelected(0);
+                            break;
+                    }
+                    return false;
+                }
+            });
+        }
+
+
+    }
+
+    private void closeToolbarVideo() {
+        isToolbarVideoShow = false;
+        Fragment fragment = getTab(TAB_VIDEO);
+        if (fragment instanceof VideoFragment) {
+            binding.toolbarHideFilesEdit.getMenu().clear();
+            binding.toolbarHideFilesEdit.setVisibility(View.GONE);
+            ((VideoFragment) fragment).setLongClickedEvent(false);
+            ((VideoFragment) fragment).unselectAll();
+        }
     }
 
     private void intToolbarAlbum() {
@@ -832,7 +1039,6 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         Fragment fragment = getTab(TAB_ALBUM);
         if (fragment instanceof AlbumsFragment) {
             setTextNumOfSelected(0);
-            ((AlbumsFragment) fragment).setLongClickedEvent(true);
             ((AlbumsFragment) fragment).setLongClickedEvent(true);
             binding.toolbarHideFilesEdit.setVisibility(View.VISIBLE);
             binding.toolbarHideFilesEdit.inflateMenu(R.menu.home_edit_album);
@@ -853,7 +1059,6 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                             ((AlbumsFragment) fragment).deleteAlbumsSelected(new OnFileDialogEventListener() {
                                 @Override
                                 public void onOk(FileItem... items) {
-                                    handleBackMultiSelected();
                                     refreshFileGalleryDeleted(items);
                                 }
                             });
@@ -896,103 +1101,18 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
     private void queryText(String newText, int tabPhoto) {
-        if (tabPhoto == TAB_ALBUM) {
-            albumsFragment.search(newText);
-        } else {
-            photoFragment.search(newText, isDaySection);
+        switch (tabPhoto) {
+            case TAB_ALBUM:
+                albumsFragment.search(newText);
+                break;
+            case TAB_PHOTO:
+                photoFragment.search(newText, isDaySection);
+                break;
+            case TAB_VIDEO:
+                videoFragment.search(newText, isDaySection);
+                break;
         }
 
-    }
-
-    private void openDialogInputNameAlbum() {
-        LayoutInflater li = LayoutInflater.from(mContext);
-        View promptsView = li.inflate(R.layout.dialog_input_filename, null);
-
-        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
-
-        // set prompts.xml to alertdialog builder
-        alertDialogBuilder.setView(promptsView);
-
-        TextView titleInput = (TextView) promptsView.findViewById(R.id.textView1);
-        titleInput.setText(getString(R.string.enter_album_name));
-
-        final EditText userInput = (EditText) promptsView
-                .findViewById(R.id.editTextDialogUserInput);
-
-
-        // set dialog message
-        alertDialogBuilder
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.ok),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // get user input and set it to result
-                                // edit text
-                                mInputText = userInput.getText().toString();
-
-                                if (mInputText.length() <= 0) {
-                                    Toast.makeText(mContext, getString(R.string.please_enter_name_of_album),
-                                            Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-//                                onItemAlbumClicked(-1, null);
-                                KeyboardUtil.hideKeyboard(mContext, userInput);
-                                dialog.cancel();
-                            }
-                        })
-                .setNegativeButton(getString(R.string.cancel),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                KeyboardUtil.hideKeyboard(mContext, userInput);
-                                dialog.cancel();
-                            }
-                        });
-
-        // create alert dialog
-        alertDialog = alertDialogBuilder.create();
-        if (alertDialog.getWindow() != null) {
-            alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-
-        // show it
-        alertDialog.show();
-
-        // Initially disable the button
-        ((AlertDialog) alertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
-                .setEnabled(false);
-
-        // Now set the textchange listener for edittext
-        userInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (TextUtils.isEmpty(s)) {
-                    // Disable ok button
-                    ((AlertDialog) alertDialog).getButton(
-                            AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                } else {
-                    // Something into edit text. Enable the button.
-                    ((AlertDialog) alertDialog).getButton(
-                            AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                }
-            }
-        });
-        refreshGallery();
-    }
-
-
-    @Override
-    public void onPhotoFragmentReady() {
-//        ((PhotoFragment) photoFragment).initialize(listAllImgs, mapAllImgSections);
-//        ((PhotoFragment) photoFragment).updateUI(listAllImgs, mapAllImgSections);
     }
 
 
@@ -1012,6 +1132,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         handleItemClicked(file, numOfSelected);
     }
 
+
     private void handleItemClicked(FileItem file, int numOfSelected) {
         if (file == null) {
             return;
@@ -1020,7 +1141,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
     }
 
-    Handler handler = new Handler();
+
+
+    private Handler handler = new Handler();
 
     @Override
     public void openPhotoViewer(FileItem file) {
@@ -1028,18 +1151,22 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (!isSearchViewClose()) {
             SearchViewClose();
         }
+        if (SystemClock.elapsedRealtime() - mLastClickTime < ConstValue.TIME_THRESHOLD_BETWEEN_TWO_CLICKS) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
 
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+//        handler.removeCallbacksAndMessages(null);
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
 
                 photoViewerFrag = PhotoViewerFragment.newInstance(file).setListener(HomeFragment.this);
                 addFragment(photoViewerFrag, true);
                 PhotoViewerFragment photoViewerFragment = (PhotoViewerFragment) photoViewerFrag;
                 photoViewerFragment.clearLightStatusBar(getActivity());
-            }
-        }, 200);
+//            }
+//        }, 350);
 
 
     }
@@ -1054,15 +1181,13 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
         setTextNumOfSelected(1);
 //        Utils.scaleView(tabLayout, 1, 0);
-
-        setHeightViewPager(heightLargeViewPager);
 //        viewPager.animate().translationY(-heightTabLayout).setDuration(ConstValue.ANIM_DURATION);
 
         Flog.d(TAG, "onGlobalLayout height123=" + mHeightAdmobBanner);
     }
 
     public boolean getToolbarShow() {
-        return isToolbarShow || isToolbarAlbumShow;
+        return isToolbarShow || isToolbarAlbumShow || isToolbarVideoShow;
     }
 
     public void closeToolbar() {
@@ -1071,6 +1196,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         }
         if (isToolbarShow) {
             closeToolbarPhoto();
+        }
+        if (isToolbarVideoShow) {
+            closeToolbarVideo();
         }
     }
 
@@ -1182,7 +1310,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         setTextNumOfSelected(1);
 //        Utils.scaleView(tabLayout, 1, 0);
 
-        setHeightViewPager(heightLargeViewPager);
+
 //        viewPager.animate().translationY(-heightTabLayout).setDuration(ConstValue.ANIM_DURATION);
 
         Flog.d(TAG, "onGlobalLayout height123=" + mHeightAdmobBanner);
@@ -1196,26 +1324,28 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         }
     }
 
-
-    @Override
-    public void onAlbumsFragmentReady() {
-//        ((AlbumsFragment) albumsFragment).initialize(mapAllFolders);
-//        ((AlbumsFragment) albumsFragment).updateUI(mapAllFolders);
-    }
+    private Handler handler2 = new Handler();;
 
     @Override
     public void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles) {
         if (!isSearchViewClose()) {
             SearchViewClose();
         }
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                filesAlbumFrag = FilesAlbumFragment.newInstance(listFiles, nameAlbum).setListener(HomeFragment.this);
-                addFragment(filesAlbumFrag, true);
-            }
-        }, 200);
+        if (SystemClock.elapsedRealtime() - mLastClickTime < ConstValue.TIME_THRESHOLD_BETWEEN_TWO_CLICKS) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+//         handler2.removeCallbacksAndMessages(null);
+//                handler2.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelableArrayList(EXTRA_LIST_ALL_FILES,  listFiles);
+                        bundle.putString(ALBUM_NAME,nameAlbum);
+                        filesAlbumFrag = FilesAlbumFragment.newInstance(bundle).setListener(HomeFragment.this);
+                        addFragment(filesAlbumFrag, true);
+//            }
+//        }, 350);
 
     }
 
@@ -1229,199 +1359,6 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         setTextNumOfSelected(numOfSelected);
     }
 
-    private void showAdDialogApps() {
-    }
-
-    private void showPopupMulAlbumDialog() {
-
-        // mis-clicking prevention, using threshold of 1000 ms
-        if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-            return;
-        }
-        mLastClickTime = SystemClock.elapsedRealtime();
-
-        // do your magic here
-
-        // setup the alert builder
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        // add a list
-        String[] animals = {getString(R.string.share), getString(R.string.select_all),
-                getString(R.string.unselect_all)};
-        builder.setItems(animals, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0: // share
-                        actionShareFiles();
-                        break;
-                    case 1: // select all
-                        actionSelectAll();
-                        break;
-                    case 2: // unselect all
-                        actionUnselectAll();
-                        break;
-                }
-                dialog.dismiss();
-            }
-        });
-
-        // create and open the alert dialogPopup
-        AlertDialog dialogPopup = builder.create();
-
-        Window window = dialogPopup.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-
-        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
-
-        dialogPopup.show();
-    }
-
-
-    private void handleDeleteMultiSelected() {
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            if (!FLAG_REFRESH_OPTIMIZE) {
-//                ((PhotoFragment) photoFragment).deleteFilesSelected(new OnDialogEventListener() {
-//                    @Override
-//                    public void onOk() {
-//                        handleBackMultiSelected();
-//                        refreshGallery();
-//                    }
-//
-//                    @Override
-//                    public void onCancel() {
-//
-//                    }
-//                });
-//            } else {
-//                ((PhotoFragment) photoFragment).deleteFilesSelected(new OnFileDialogEventListener() {
-//                    @Override
-//                    public void onOk(FileItem... items) {
-//                        handleBackMultiSelected();
-//                        refreshFileGalleryDeleted(items);
-//                    }
-//                });
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//            ((AlbumsFragment) albumsFragment).deleteAlbumsSelected(new OnFileDialogEventListener() {
-//                @Override
-//                public void onOk(FileItem... items) {
-//                    handleBackMultiSelected();
-//                    refreshFileGalleryDeleted(items);
-//                }
-//            });
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//
-//            if (!FLAG_REFRESH_OPTIMIZE) {
-//                ((FavouriteFragment) favouriteFragment).deleteFilesSelected(new OnDialogEventListener() {
-//                    @Override
-//                    public void onOk() {
-//                        handleBackMultiSelected();
-//                        refreshGallery();
-//                    }
-//
-//                    @Override
-//                    public void onCancel() {
-//
-//                    }
-//                });
-//            } else {
-//                ((FavouriteFragment) favouriteFragment).deleteFilesSelected(new OnFileDialogEventListener() {
-//                    @Override
-//                    public void onOk(FileItem... items) {
-//                        handleBackMultiSelected();
-//                        refreshFileGalleryDeleted(items);
-//                    }
-//                });
-//            }
-//        }
-    }
-
-    private void showPopupMulFileDialog() {
-        if (dialogPopupMulFile != null && !dialogPopupMulFile.isShowing()) {
-            dialogPopupMulFile.show();
-        }
-    }
-
-    private void showPopupFileDialog(int type, final FileItem fileItem) {
-
-        // mis-clicking prevention, using threshold of 1000 ms
-        if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-            return;
-        }
-        mLastClickTime = SystemClock.elapsedRealtime();
-
-        // do your magic here
-
-        // setup the alert builder
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        // add a list
-        String[] items = null;
-
-        if (type == BaseFragment.FRAGMENT_PHOTO_VIEWER) {
-            items = new String[]{getString(R.string.details),
-                    getString(R.string.rename), getString(R.string.open_with),
-                    getString(R.string.set_picture_as)};
-        } else if (type == BaseFragment.FRAGMENT_VIDEO_VIEWER) {
-            items = new String[]{getString(R.string.details),
-                    getString(R.string.rename), getString(R.string.open_with)};
-        }
-
-        if (fileItem.path.endsWith(".gif")) {
-            items = new String[]{getString(R.string.details),
-                    getString(R.string.rename), getString(R.string.open_with)};
-        }
-
-        builder.setItems(items, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0: // details
-                        actionDetails(fileItem);
-                        break;
-                    case 1: // rename
-                        actionRename(fileItem);
-                        break;
-                    case 2: // open with
-                        actionOpenWith(fileItem);
-                        break;
-                    case 3: // set picture as
-                        actionSetPictureAs(fileItem);
-                        break;
-                }
-                dialog.dismiss();
-            }
-        });
-
-        // create and open the alert dialogPopupMulFile
-        dialogPopupFile = builder.create();
-
-        Window window = dialogPopupFile.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-
-        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
-
-        if (dialogPopupFile != null && !dialogPopupFile.isShowing()) {
-            dialogPopupFile.show();
-        }
-    }
-
-    private void actionEditPhoto(FileItem fileItem) {
-
-        Intent intent = new Intent(mContext, EditPhotoActivity.class);
-        intent.putExtra(ConstValue.EXTRA_FILE_ITEM_TO_EDIT, fileItem);
-        startActivityForResult(intent, ConstValue.REQUEST_CODE_EDIT_PHOTO_ACTIVITY);
-    }
-
-
     private void actionRename(FileItem fileItem) {
         openDialogInputName(fileItem);
     }
@@ -1431,9 +1368,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (listAllFiles.size() > 0) {
             for (int i = 0; i < listAllFiles.size(); i++) {
                 if ((new File(listAllFiles.get(i).path).getParent().equals(new File(fileItem.path).getParent()))) {
-                    Flog.d("CCCCCCC", "name1: " + listAllFiles.get(i).name + "___" + newTitle + "___Finame: "+fileItem.name);
+                    Flog.d("CCCCCCC", "name1: " + listAllFiles.get(i).name + "___" + newTitle + "___Finame: " + fileItem.name);
                     if (newTitle.equals(listAllFiles.get(i).name)) {
-                        Flog.d("CCCCCCC", "name2: " + listAllFiles.get(i).name + "___" + newTitle + "___Finame: "+fileItem.name);
+                        Flog.d("CCCCCCC", "name2: " + listAllFiles.get(i).name + "___" + newTitle + "___Finame: " + fileItem.name);
                         check = true;
                         break;
                     }
@@ -1456,6 +1393,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         final EditText userInput = (EditText) promptsView
                 .findViewById(R.id.editTextDialogUserInput);
         userInput.setText(fileItem.name);
+        userInput.setFilters(new InputFilter[]{Utils.filter});
         userInput.selectAll();
 
         // set dialog message
@@ -1478,7 +1416,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                                     boolean success = false;
                                     if (!checkFileName(input, fileItem)) {
                                         success = FileUtil.rename(mContext, new File(fileItem.path), input + FileUtil.getExtension(fileItem.path));
-                                    }else {
+                                    } else {
 
                                     }
                                     String path = fileItem.path;
@@ -1557,7 +1495,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         });
     }
 
-    private void actionSetPictureAs(FileItem fileItem) {
+    private void actionSetPictureAs() {
         Flog.d(TAG, "actionOpenWith=");
         if (photoViewerFrag != null) {
             ((PhotoViewerFragment) photoViewerFrag).showBottomDialog();
@@ -1597,9 +1535,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         addText(lnInfoContainer, getString(R.string.last_modified),
                 DateUtils.getDate(Utils.parseLong(fileItem.date_modified), DateUtils.FORMAT_DATE_2));
 
-        Flog.d(TAG, "size of file=" + fileItem.size);
+        Flog.d(TAG, "size of file=" + fileItem.mSize);
         addText(lnInfoContainer, getString(R.string.size),
-                FileUtil.formatSize(Utils.parseLong(fileItem.size)));
+                Formatter.formatFileSize(mContext,(fileItem.mSize)));
         addText(lnInfoContainer, getString(R.string.filetype), fileItem.mime_type);
         addText(lnInfoContainer, getString(R.string.width), fileItem.width);
         addText(lnInfoContainer, getString(R.string.height), fileItem.height);
@@ -1645,112 +1583,6 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         lnInfoContainer.addView(textView);
     }
 
-    private void initPopupMulFileDialog() {
-        // setup the alert builder
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        // add a list
-        String[] animals = {getString(R.string.share), getString(R.string.copy),
-                getString(R.string.move), getString(R.string.select_all),
-                getString(R.string.unselect_all)};
-        builder.setItems(animals, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0: // share
-                        actionShareFiles();
-                        break;
-                    case 1: // copy
-                        actionCopyFiles();
-                        break;
-                    case 2: // move
-                        actionMoveFiles();
-                        break;
-                    case 3: // select all
-                        actionSelectAll();
-                        break;
-                    case 4: // unselect all
-                        actionUnselectAll();
-                        break;
-                }
-                dialog.dismiss();
-            }
-        });
-
-        // create and open the alert dialogPopupMulFile
-        dialogPopupMulFile = builder.create();
-
-        Window window = dialogPopupMulFile.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-
-        wlp.gravity = Gravity.TOP | Gravity.RIGHT;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
-    }
-
-    private void actionMoveFiles() {
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            HashMap<Integer, FileItem> mapPosChanged = ((PhotoFragment) photoFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.move));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            HashMap<Integer, FileItem> mapPosChanged = ((VideoFragment) videoFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.move));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//            HashMap<Integer, FileItem> mapPosChanged = ((FavouriteFragment) favouriteFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.move));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_MOVE, listPosChanged);
-//            }
-//        }
-    }
-
-    private void actionCopyFiles() {
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            HashMap<Integer, FileItem> mapPosChanged = ((PhotoFragment) photoFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.copy));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            HashMap<Integer, FileItem> mapPosChanged = ((VideoFragment) videoFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.copy));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//
-//            HashMap<Integer, FileItem> mapPosChanged = ((FavouriteFragment) favouriteFragment).getListPositionChanged();
-//            ArrayList<FileItem> listPosChanged = getListFromMap(mapPosChanged);
-//            if (listPosChanged.size() <= 0) {
-//                showHintSelectImgsDialog(getString(R.string.copy));
-//            } else {
-//                openSelectAlbum(ConstValue.ACTION_COPY, listPosChanged);
-//            }
-//        }
-    }
 
     private void showHintSelectImgsDialog(String action) {
         Toast.makeText(mContext, getString(R.string.please_select_media_for)
@@ -1771,149 +1603,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         return list;
     }
 
-    private void actionUnselectAll() {
-//
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            ((PhotoFragment) photoFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            ((VideoFragment) videoFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//            ((AlbumsFragment) albumsFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//
-//            ((FavouriteFragment) favouriteFragment).unselectAll();
-//        }
-//
-//        setTextNumOfSelected(0);
-    }
-
-    private void actionSelectAll() {
-
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            ((PhotoFragment) photoFragment).selectAll();
-//            setTextNumOfSelected(listAllImgs.size());
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            ((VideoFragment) videoFragment).selectAll();
-//            setTextNumOfSelected(listAllVideos.size());
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//            ((AlbumsFragment) albumsFragment).selectAll();
-//            setTextNumOfSelected(mapAllFolders.size());
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//
-//            ((FavouriteFragment) favouriteFragment).selectAll();
-//            setTextNumOfSelected(listAllVideos.size());
-//        }
-    }
-
-    private void actionShareFiles() {
-//
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            boolean shared = ((PhotoFragment) photoFragment).shareFilesSelected();
-//            if (!shared) {
-//                showHintSelectImgsDialog(getString(R.string.share));
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            boolean shared = ((VideoFragment) videoFragment).shareFilesSelected();
-//            if (!shared) {
-//                showHintSelectImgsDialog(getString(R.string.share));
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//            boolean shared = ((AlbumsFragment) albumsFragment).shareAlbumsSelected();
-//            if (!shared) {
-//                showHintSelectImgsDialog(getString(R.string.share));
-//            }
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//
-//            boolean shared = ((FavouriteFragment) favouriteFragment).shareFilesSelected();
-//            if (!shared) {
-//                showHintSelectImgsDialog(getString(R.string.share));
-//            }
-//        }
-    }
-
-    private void handleBackMultiSelected() {
-//
-//        if (tabLayout.getSelectedTabPosition() == 0) { // Tab Photos
-//
-//            ((PhotoFragment) photoFragment).setLongClickedEvent(false);
-//            ((PhotoFragment) photoFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 1) { // Tab Videos
-//
-//            ((VideoFragment) videoFragment).setLongClickedEvent(false);
-//            ((VideoFragment) videoFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 2) { // Tab Albums
-//
-//            ((AlbumsFragment) albumsFragment).setLongClickedEvent(false);
-//            ((AlbumsFragment) albumsFragment).unselectAll();
-//        } else if (tabLayout.getSelectedTabPosition() == 3) { // Tab Favourite
-//            ((FavouriteFragment) favouriteFragment).setLongClickedEvent(false);
-//            ((FavouriteFragment) favouriteFragment).unselectAll();
-//        }
-//
-//        showMyToolbar(true);
-//        Utils.scaleView(tabLayout, 0, 1);
-//
-//        setHeightViewPager(heightNormalViewPager);
-//        viewPager.animate().translationY(0).setDuration(ConstValue.ANIM_DURATION);
-    }
-
-    private void setHeightViewPager(int heightViewPager) {
-//        ViewGroup.LayoutParams params = viewPager.getLayoutParams();
-//        params.height = heightViewPager;
-//        viewPager.requestLayout();
-    }
-
-
-//    @Override
-//    protected void onResume() {
-//        if (FLAG_RELOAD_GALLERY) {
-//            Flog.d(TAG, "refresh lazy!!!");
-//            refreshGallery();
-//        }
-//        FLAG_RELOAD_GALLERY = false;
-//        super.onResume();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        Flog.d(TAG, "onPause=" + FLAG_RELOAD_GALLERY);
-//        setFlags();
-//
-//        super.onPause();
-//    }
-
 
     private void initAdmob() {
+
     }
 
-
-    private void showVersionDialog(Activity context, String version) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(context.getString(R.string.version))
-                .setMessage(version)
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
-                        dialog.dismiss();
-                    }
-                });
-//                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-//                    public void onClick(final DialogInterface dialogPopupMulFile, @SuppressWarnings("unused") final int id) {
-//                        dialogPopupMulFile.dismiss();
-//                    }
-//                });
-        final AlertDialog alert = builder.create();
-        alert.show();
-    }
 
     @Override
     public void onBackFileAlbumsFragment() {
@@ -2019,6 +1713,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
     @Override
+    public void onSaveImageDone() {
+        refreshGallery();
+    }
+
+    @Override
     public void onPhotoViewerFragmentReady() {
         PhotoViewerFragment photoViewerFragment = (PhotoViewerFragment) this.photoViewerFrag;
         photoViewerFragment.setValues();
@@ -2035,8 +1734,15 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
     @Override
-    public void onMorePhotoViewerFragment(FileItem fileItem) {
-        showPopupFileDialog(BaseFragment.FRAGMENT_PHOTO_VIEWER, fileItem);
+    public void onMorePhotoViewerFragment(FileItem fileItem, int action) {
+        switch (action) {
+            case RENAME:
+                actionRename(fileItem);
+                break;
+            case DETAILS:
+                actionDetails(fileItem);
+                break;
+        }
     }
 
     @Override
@@ -2195,39 +1901,87 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         }
     }
 
-    @Override
-    public void onVideoFragmentReady() {
-
-    }
 
     @Override
     public void onItemInVideoLongClicked(FileItem file) {
-
+        if (file == null) {
+            return;
+        }
+        intToolbarVideo();
+        setTextNumOfSelected(1);
     }
 
     @Override
     public void onItemInVideoClicked(FileItem file, int numOfSelected) {
-
+        if (file == null) {
+            return;
+        }
+        setTextNumOfSelected(numOfSelected);
     }
+
+    private FileItem fileItemVideo = null;
 
     @Override
     public void openVideoViewer(FileItem file) {
         if (!isSearchViewClose()) {
             SearchViewClose();
         }
+                fileItemVideo = file;
+                startActivityForResult(new Intent(mContext, ExoPlayerActivity.class)
+                                .putParcelableArrayListExtra(EXTRA_LIST_ALL_FILES, listAllVideos)
+                                .putExtra(VIDEO_EDIT_URI_KEY, file.path)
+                                .putExtra(VIDEO_NAME_KEY, file.name)
+                                .putExtra(VIDEO_FILE_ITEM,file)
+                                .putExtra(VIDEO_OPEN_WITH, false)
+                        , KEY_VIDEO_EXO);
 
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Flog.d(TAG, "openPhotoViewer=" + file);
-                videoViewerFrag = VideoViewerFragment.newInstance(file).setListener(HomeFragment.this);
-                addFragment(videoViewerFrag, true);
-                VideoViewerFragment videoViewerFragment = (VideoViewerFragment) videoViewerFrag;
-                videoViewerFragment.clearLightStatusBar(getActivity());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == KEY_VIDEO_EXO) {
+            int action = data.getIntExtra(PLAY_VIDEO, 0);
+            Flog.d("FAVORITE","1111111");
+
+            switch (action) {
+                case REFRESH:
+                    refreshGallery();
+                    getFragmentManager().popBackStack();
+                    break;
+                case FAVORITE:
+                    if (favouriteFragment != null) {
+                        ((FavouriteFragment) favouriteFragment).refreshList();
+                        Flog.d("FAVORITE","2222222");
+                    }
+                    break;
+                case DELETE:
+                    Uri uri = Uri.fromFile(new File(fileItemVideo.path));
+                    String mes = "";
+
+                    boolean success = FileUtil.delete(mContext, uri);
+                    Flog.d(TAG, "success ATAA=" + success);
+                    if (success) {
+                        DbUtils.deleteFavourite(fileItemVideo);
+                    } else {
+                        mes += fileItemVideo.path + "\n";
+                    }
+                    if (mes.equals("")) {
+                        FileUtil.toastSuccess(mContext, mContext.getString(R.string.delete));
+                        FileUtil.scanMediaStore(mContext, fileItemVideo.path);
+                    } else {
+                        FileUtil.toastFailed(mContext, mContext.getString(R.string.delete) + ":\n" + mes);
+                    }
+
+                    refreshGallery();
+                    break;
             }
-        }, 200);
-
+        }
     }
 
     @Override

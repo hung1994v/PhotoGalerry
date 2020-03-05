@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="filter_color_bottom_menu">#1e1e1e</color>
-    <color name="bg_app">#121212</color>
+    <color name="filter_color_bottom_menu">#242424</color>
+    <color name="filter_color_bg">#3C3D41</color>
+    <color name="color_blue">#537DEF</color>
+    <color name="color_button_ads">#3C3D41</color>
 </resources>

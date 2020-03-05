@@ -1,6 +1,7 @@
 package bsoft.healthy.tracker.menstrual.lib_sticker.main;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
@@ -35,7 +36,7 @@ import bsoft.healthy.tracker.menstrual.lib_sticker.fragments.TextMoreAdjustFragm
  */
 
 public class TextStickerView extends BaseStickerView {
-
+    public static final int MAX_TEXT_SIZE = 50;
     public static final int TEXT_ALIGN_LEFT = 0x11;
     public static final int TEXT_ALIGN_CENTER = 0x12;
     public static final int TEXT_ALIGN_RIGHT = 0x13;
@@ -245,7 +246,62 @@ public class TextStickerView extends BaseStickerView {
     /**
      * When size of text is changed, resizing textCanvas for drawing text on it.
      */
+
     private void resizeTextCanvas() {
+
+//        autoSplit(mText, mTextFont, mTextMaxWidth - mTextMargin);
+
+        mTextLines = separateText(mText);
+        mLines.clear();
+        for (int i = 0; i < mTextLines.length; i++) {
+            String[] pLines = autoSplit(mTextLines[i], mTextFont, mTextMaxWidth - mTextMargin);
+            if (pLines.length <= 0) {
+                continue;
+            } else if (pLines.length == 1) {
+                mLines.add(mTextLines[i]);
+            } else {
+                for (int j = 0; j < pLines.length; j++) {
+                    mLines.add(pLines[j]);
+                }
+            }
+        }
+
+        for (int i = 0; i < mLines.size(); i++) {
+        }
+
+        String curText = TextUtils.isEmpty(mText) ? mDefaultText : mText;
+
+        /**
+         * Get dimension(s) of text. There are two ways:
+         * 1- Using Font.getTextBounds(str, 0, str.length(), rect) -> get width & height of text.
+         * 2- Using Font.measureText(str) -> get width of text.
+         * */
+//        Rect boundRect = new Rect();
+//        mTextFont.getTextBounds(curText, 0, curText.length(), boundRect);
+//        PIPlog.d(TAG, "mTextLines len=" + mTextLines.length);
+//        PIPlog.d(TAG, "height text = " + (mTextPadding * mTextLines.length));
+        Paint.FontMetrics fontMetrics = mTextFont.getFontMetrics();
+//        float additionalHeight = (mTextLines.length - 1) * (Math.abs(mTextFont.getFontMetrics().leading + mTextPadding));
+        float additionalHeight = (mLines.size() - 1) * (Math.abs(mTextFont.getFontMetrics().leading + mTextPadding));
+//        PIPlog.d(TAG, "additionalHeight=" + additionalHeight);
+//        float heightText = (fontMetrics.descent - fontMetrics.ascent) * mTextLines.length + additionalHeight;
+        float heightText = (fontMetrics.descent - fontMetrics.ascent) * mLines.size() + additionalHeight;
+//        PIPlog.d(TAG, "width 1="+mTextFont.measureText(curText)+"_2="+boundRect.width());
+        int widthText = (int) mTextFont.measureText(curText) + mTextMargin;
+//        PIPlog.d(TAG, "size text: w=" + widthText + "_h=" + heightText + "_mTextMaxWidth=" + mTextMaxWidth);
+        if (widthText >= mTextMaxWidth)
+            widthText = mTextMaxWidth + mTextMargin;
+//        PIPlog.d(TAG, "mPIPView.getHeight()=" + mPIPView.getHeight());
+
+        if (widthText <= 0 || heightText <= 0) return;
+        try {
+            Bitmap bmpText = Bitmap.createBitmap(widthText, Math.round(heightText), Bitmap.Config.ARGB_4444);
+            setBitmap(bmpText);
+        } catch (OutOfMemoryError error) {
+            error.printStackTrace();
+        }
+    }
+    private void resizeTextCanvas1() {
 
 //        autoSplit(mText, mTextFont, mTextMaxWidth - mTextMargin);
 
@@ -309,6 +365,9 @@ public class TextStickerView extends BaseStickerView {
             error.printStackTrace();
         }
     }
+
+
+
 
     private String[] separateText(String text) {
         return text.split("\n");
@@ -542,6 +601,15 @@ public class TextStickerView extends BaseStickerView {
 //        }
     }
 
+    public void setTranslateInit_2() {
+        if (mIsInit) {
+            mMatrix.setTranslate((mScreenwidth-mBitmap.getWidth())/2,(mScreenwidth-mBitmap.getHeight())/2);
+            mParentView.invalidate();
+            Log.d("XXXXXX","width: "+ (mScreenwidth-mBitmap.getWidth())/2 + "height: "+ (mScreenwidth-mBitmap.getHeight())/2);
+            mIsInit = false;
+        }
+    }
+
     public TextPaint getTextFont() {
         return mTextFont;
     }
@@ -567,17 +635,49 @@ public class TextStickerView extends BaseStickerView {
         if (mTextFont.getShader() != null)
             mTextFont.setShader(null);
         mTextFont.setColor(color);
+        resizeTextCanvas();
         mParentView.invalidate();
     }
 
-    public void setTextPattern(Context context, String bgName) {
-        InputStream inputStream = null;
+    synchronized public static Bitmap loadBitmapFromAssets(Context context, String fullPath) {
+        Bitmap frameBitmap = null;
+
+        String imagePath = fullPath;
+        AssetManager assetMng = context.getAssets();
+
+        // Create an input stream to read from the asset folder
+        InputStream is = null;
         try {
-            inputStream = context.getResources().getAssets().open("bg/" + bgName);
-            mPatternBmp = BitmapFactory.decodeStream(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
+            is = assetMng.open(imagePath);
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
+
+        //Get the texture from the Android resource directory
+        //InputStream is = context.getResources().openRawResource(R.drawable.radiocd5);
+        if (frameBitmap != null) {
+            frameBitmap.recycle();
+            frameBitmap = null;
+        }
+        try {
+            //BitmapFactory is an Android graphics utility for images
+            frameBitmap = BitmapFactory.decodeStream(is);
+
+        } finally {
+            //Always clear and close
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return frameBitmap;
+    }
+
+    public void setTextPattern(Context context, String bgName) {
+        mPatternBmp = loadBitmapFromAssets(context,bgName);
         Shader shader = new BitmapShader(mPatternBmp,
                 Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
         shader.setLocalMatrix(mMatrix);

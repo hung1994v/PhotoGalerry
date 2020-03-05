@@ -4,69 +4,21 @@
     android:id="@+id/content_main_filter"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_app">
-
-    <RelativeLayout
-        android:id="@+id/topbar_filter"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/huge"
-        android:background="@color/bg_app"
-        android:visibility="visible">
-
-        <ImageView
-            android:id="@+id/btn_filter_exit"
-            android:layout_width="@dimen/icon_size_small"
-            android:layout_height="@dimen/icon_size_small"
-            android:layout_alignParentLeft="true"
-            android:layout_centerInParent="true"
-            android:layout_margin="@dimen/small"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_exit" />
-
-
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:id="@+id/btn_filter_save"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerInParent="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true">
-
-            <ImageView
-                android:layout_width="@dimen/icon_size_small"
-                android:layout_height="@dimen/icon_size_small"
-                android:layout_margin="@dimen/small"
-                android:src="@drawable/ic_save" />
-        </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-    </RelativeLayout>
-
+    android:background="@color/filter_color_bg"
+    android:clickable="true"
+    android:focusable="true">
 
     <FrameLayout
-        android:id="@+id/container_filter"
+        android:id="@+id/container_ads_banner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/topbar_filter">
-
-        <com.google.android.gms.ads.AdView
-            android:id="@+id/adView_filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            ads:adSize="BANNER"
-            ads:adUnitId="@string/admob_banner_ad"></com.google.android.gms.ads.AdView>
-
-
-    </FrameLayout>
-
+        android:layout_height="wrap_content"/>
 
     <RelativeLayout
+        android:id="@+id/container_img"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/bottombar"
-        android:layout_below="@+id/container_filter"
+        android:layout_below="@+id/container_ads_banner"
         android:layout_centerInParent="true"
         android:visibility="visible">
 
@@ -77,8 +29,8 @@
             android:layout_centerInParent="true" />
     </RelativeLayout>
 
-
     <RelativeLayout
+        android:id="@+id/container_loading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
@@ -86,6 +38,7 @@
         android:layout_alignParentTop="true">
 
         <bsoft.com.lib_filter.filter.indicators.AVLoadingIndicatorView
+            android:id="@+id/indicator"
             style="@style/AVLoadingIndicatorView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -104,11 +57,57 @@
         android:background="@color/filter_color_bottom_menu"
         android:orientation="vertical">
 
+        <RelativeLayout
+            android:id="@+id/menu_topbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/btn_filter_exit"
+                android:layout_width="@dimen/icon_size_small"
+                android:layout_height="@dimen/icon_size_small"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_x_close"
+                android:padding="@dimen/xx_small"
+                android:layout_marginLeft="@dimen/xx_small"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/small"
+                android:text="@string/filter"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/font_size_large"
+                android:textStyle="bold"
+                android:layout_centerInParent="true"/>
+
+            <ImageView
+                android:id="@+id/btn_filter_save"
+                android:layout_width="@dimen/icon_size_small"
+                android:layout_height="@dimen/icon_size_small"
+                android:layout_alignParentRight="true"
+                android:layout_centerInParent="true"
+                android:layout_margin="@dimen/small"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_save" />
+        </RelativeLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycle_filter_new"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/xx_small"
+            android:layout_marginTop="@dimen/xx_large"
+            android:layout_below="@+id/menu_topbar"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycle_filter"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/xx_small"
-            android:layout_marginTop="@dimen/xx_small"></androidx.recyclerview.widget.RecyclerView>
+            android:layout_marginTop="@dimen/xx_large"
+            android:layout_below="@+id/menu_topbar"
+            android:visibility="gone"/>
     </RelativeLayout>
 </RelativeLayout>

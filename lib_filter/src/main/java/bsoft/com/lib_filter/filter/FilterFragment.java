@@ -10,21 +10,27 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
-
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.google.android.gms.ads.formats.NativeAd;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
+import com.google.android.gms.ads.formats.UnifiedNativeAdView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +39,8 @@ import java.util.Map;
 
 
 import bsoft.com.lib_filter.R;
+import bsoft.com.lib_filter.filter.adapter.filter.FilterNewAdapter;
+import bsoft.com.lib_filter.filter.model.FilterChild;
 import bsoft.com.lib_filter.filter.gpu.AsyncSizeProcess;
 import bsoft.com.lib_filter.filter.gpu.GPUFilterRes;
 import bsoft.com.lib_filter.filter.gpu.SquareUiLidowFilterManager;
@@ -42,15 +50,15 @@ import bsoft.com.lib_filter.filter.adapter.filter.HorizontalExpandableAdapter;
 import bsoft.com.lib_filter.filter.recycler.ExpandableRecyclerAdapter;
 import bsoft.com.lib_filter.filter.model.FilterHorizontalChild;
 import bsoft.com.lib_filter.filter.model.FilterHorizontalParent;
+import bsoft.com.lib_filter.filter.recycler.model.ExpandableWrapper;
 
 
-public class FilterFragment extends Fragment implements ExpandableRecyclerAdapter.ExpandCollapseListener, HorizontalExpandableAdapter.OnItemChildListener, View.OnClickListener {
+public class FilterFragment extends Fragment implements ExpandableRecyclerAdapter.ExpandCollapseListener, HorizontalExpandableAdapter.OnItemChildListener, View.OnClickListener, FilterNewAdapter.OnItemChildListener {
     private RecyclerView mRFilter;
     private Bitmap mBitmapFilter;
     private ImageView mImgFilter;
     private Bitmap resultBitmap;
-    private RelativeLayout mContenmain;
-    private LinearLayoutCompat mImaSave;
+    private ImageView mImaSave;
     private ImageView mImaExit;
 
     private HandleBackFilter handleBackFilter;
@@ -62,8 +70,15 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
     List<FilterHorizontalChild> childItemList;
     private GPUFilterRes curFilterRes;
     public ArrayList<String> mListIconFilter = new ArrayList<>();
-    private AdView mAdView;
-
+    private FrameLayout mAdView;
+    private Bitmap mBitmapFilterChild ;
+    private RecyclerView mRecycleFilterNew;
+    private List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> mFilterHorizontalParentChildren = new ArrayList<>();
+    private List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> mFilterHorizontalChildren = new ArrayList<>();
+    private List<FilterChild> mFilterChildren = new ArrayList<>();
+    private ArrayList<String> mListTitleFilter = new ArrayList<>();
+    private List<GPUFilterRes> mGpuFilterRes = new ArrayList<>();
+    private UnifiedNativeAd mUnifiedNativeAd;
 
     public FilterFragment() {
 
@@ -73,6 +88,14 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         FilterFragment fragment = new FilterFragment();
         fragment.mBitmapFilter = bitmap;
         fragment.handleBackFilter = backFilter;
+        return fragment;
+    }
+
+    public static FilterFragment newInstance(Bitmap bitmap, HandleBackFilter backFilter, UnifiedNativeAd unifiedNativeAd) {
+        FilterFragment fragment = new FilterFragment();
+        fragment.mBitmapFilter = bitmap;
+        fragment.handleBackFilter = backFilter;
+        fragment.mUnifiedNativeAd = unifiedNativeAd;
         return fragment;
     }
 
@@ -91,12 +114,12 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        initImageLoader();
         loadIconFilter();
         initView();
-//        initAdmob();
         setImage();
+        mBitmapFilterChild = getResizedBitmap(mBitmapFilter);
         initRecyclerView();
+        initAdBanner();
     }
 
     private void setImage() {
@@ -115,28 +138,122 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         }
     }
 
-    private void initAdmob() {
-        mAdView = (AdView) getView().findViewById(R.id.adView_filter);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-    }
-
     private void initRecyclerView() {
         mListFilter = setUpTestData();
-        mExpandableAdapter = new HorizontalExpandableAdapter(getActivity(), mListFilter, resArray).setOnItemChildListener(this);
-        mExpandableAdapter.setExpandCollapseListener(this);
-        mRFilter.setAdapter(mExpandableAdapter);
-        mRFilter.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+//        mExpandableAdapter = new HorizontalExpandableAdapter(getActivity(), mListFilter, resArray,mBitmapFilterChild).setOnItemChildListener(this);
+//        mExpandableAdapter.setExpandCollapseListener(this);
+//        mRFilter.setAdapter(mExpandableAdapter);
+//        mRFilter.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+        mFilterHorizontalParentChildren = generateFlattenedParentChildList(mListFilter);
+        for (int i = 0; i < mFilterHorizontalParentChildren.size(); i++) {
+            mFilterHorizontalChildren.clear();
+            mFilterHorizontalChildren.addAll(mFilterHorizontalParentChildren.get(i).getWrappedChildList());
+            for (int j = 0; j < mFilterHorizontalChildren.size(); j++) {
+                mFilterChildren.add(new FilterChild(i,mFilterHorizontalChildren.get(j)));
+            }
+            SquareUiLidowFilterManager mFiterManager = new SquareUiLidowFilterManager(requireContext(),i, "");
+            for (int k = 0; k < mFiterManager.getCount(); k++) {
+                mGpuFilterRes.add((GPUFilterRes) mFiterManager.getRes(k));
+            }
+        }
+        mRecycleFilterNew.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+        FilterNewAdapter filterNewAdapter = new FilterNewAdapter(getActivity(),getListTitleFilter(), mGpuFilterRes,mFilterChildren,mBitmapFilterChild);
+        mRecycleFilterNew.setAdapter(filterNewAdapter);
+        filterNewAdapter.setOnItemChildListener(this);
     }
 
     private void initView() {
-        mRFilter = (RecyclerView) getView().findViewById(R.id.recycle_filter);
-        mImgFilter = (ImageView) getView().findViewById(R.id.img_filter);
-        mContenmain = (RelativeLayout) getView().findViewById(R.id.content_main_filter);
-        mImaExit = (ImageView) getView().findViewById(R.id.btn_filter_exit);
-        mImaSave = (LinearLayoutCompat) getView().findViewById(R.id.btn_filter_save);
+        mRFilter = getView().findViewById(R.id.recycle_filter);
+        mRecycleFilterNew = getView().findViewById(R.id.recycle_filter_new);
+        mImgFilter = getView().findViewById(R.id.img_filter);
+        mImaExit = getView().findViewById(R.id.btn_filter_exit);
+        mImaSave = getView().findViewById(R.id.btn_filter_save);
         mImaExit.setOnClickListener(this);
         mImaSave.setOnClickListener(this);
+    }
+
+    private void initAdBanner(){
+        mAdView = getView().findViewById(R.id.container_ads_banner);
+        AdView adView = new AdView(requireContext());
+        adView.setAdUnitId(getString(R.string.admob_banner_ad));
+        adView.setAdSize(getAdSize());
+        adView.setAdListener(new AdListener(){
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+                mAdView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                super.onAdFailedToLoad(i);
+                mAdView.setVisibility(View.GONE);
+            }
+        });
+        mAdView.addView(adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+    }
+
+    private AdSize getAdSize() {
+        Display display = requireActivity().getWindowManager().getDefaultDisplay();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        display.getMetrics(outMetrics);
+        float widthPixels = (float) outMetrics.widthPixels;
+        float density = outMetrics.density;
+        int adWidth = (int) (widthPixels / density);
+        return AdSize.getCurrentOrientationBannerAdSizeWithWidth(getContext(), adWidth);
+    }
+
+    public Bitmap getResizedBitmap(Bitmap bm) {
+        int width = 200;
+        int height = bm.getHeight()*200/bm.getWidth();
+        return Bitmap.createScaledBitmap(bm, width, height, false);
+    }
+
+    private List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> generateFlattenedParentChildList(List<FilterHorizontalParent> parentList) {
+        List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> flatItemList = new ArrayList<>();
+
+        int parentCount = parentList.size();
+        for (int i = 0; i < parentCount; i++) {
+            FilterHorizontalParent parent = parentList.get(i);
+            generateParentWrapper(flatItemList, parent, parent.isInitiallyExpanded());
+        }
+
+        return flatItemList;
+    }
+
+    private void generateParentWrapper(List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> flatItemList, FilterHorizontalParent parent, boolean shouldExpand) {
+        ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild> parentWrapper = new ExpandableWrapper<>(parent);
+        flatItemList.add(parentWrapper);
+        if (shouldExpand) {
+            generateExpandedChildren(flatItemList, parentWrapper);
+        }
+    }
+
+    private void generateExpandedChildren(List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> flatItemList, ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild> parentWrapper) {
+        parentWrapper.setExpanded(true);
+
+        List<ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild>> wrappedChildList = parentWrapper.getWrappedChildList();
+        int childCount = wrappedChildList.size();
+        for (int j = 0; j < childCount; j++) {
+            ExpandableWrapper<FilterHorizontalParent, FilterHorizontalChild> childWrapper = wrappedChildList.get(j);
+            flatItemList.add(childWrapper);
+        }
+    }
+
+    private ArrayList<String> getListTitleFilter() {
+        mListTitleFilter.add("ORIGINAL");
+        mListTitleFilter.add("SEASON");
+        mListTitleFilter.add("CLASSIC");
+        mListTitleFilter.add("SWEET");
+        mListTitleFilter.add("LOMO");
+        mListTitleFilter.add("FILM");
+        mListTitleFilter.add("FADE");
+        mListTitleFilter.add("B&W");
+        mListTitleFilter.add("VINTAGE");
+        mListTitleFilter.add("HALO");
+        return mListTitleFilter;
     }
 
     @NonNull
@@ -249,12 +366,11 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        mExpandableAdapter.onRestoreInstanceState(savedInstanceState);
+//        mExpandableAdapter.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
     public void onParentExpanded(int parentPosition) {
-
 //        initRecyclerView(parentPosition + 1);
     }
 
@@ -270,7 +386,7 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         curFilterRes = res;
         updateImagePic(new OnFilterFinishedListener() {
             @Override
-            public void postFinished() {
+            public void postFinished(Bitmap bitmap) {
 
             }
         });
@@ -282,6 +398,17 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         }
     }
 
+    @Override
+    public void onItemChildClickListener(int parent, int child) {
+        curFilterRes = mGpuFilterRes.get(child);
+        updateImagePic(new OnFilterFinishedListener() {
+            @Override
+            public void postFinished(Bitmap bitmap) {
+
+            }
+        });
+    }
+
     class AnonymousClass1 implements OnPostFilteredListener {
         private OnFilterFinishedListener val$listener;
 
@@ -290,31 +417,26 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         }
 
         public void postFiltered(Bitmap result) {
-            val$listener.postFinished();
+            val$listener.postFinished(result);
             resultBitmap = result;
             mImgFilter.setImageBitmap(result);
         }
     }
 
-
     @Override
     public void onClick(View v) {
         int i = v.getId();
         if (i == R.id.btn_filter_exit) {
-            if (handleBackFilter != null) {
-                handleBackFilter.onFilterExit();
-            }
+            requireActivity().getSupportFragmentManager().popBackStack();
 
         } else if (i == R.id.btn_filter_save) {
             Bitmap bmp = Bitmap.createBitmap(resultBitmap.getWidth(), resultBitmap.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bmp);
             canvas.drawBitmap(resultBitmap, 0, 0, new Paint());
             if (!(bmp == resultBitmap || bmp == null || bmp.isRecycled())) {
-
                 if (handleBackFilter != null) {
                     handleBackFilter.backPressFilter(bmp);
                     getActivity().getSupportFragmentManager().popBackStack();
-                    handleBackFilter.onFilterExit();
                 }
             }
 
@@ -328,30 +450,7 @@ public class FilterFragment extends Fragment implements ExpandableRecyclerAdapte
         }
     }
 
-    private void initImageLoader() {
-        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
-                .displayer(new FadeInBitmapDisplayer(200))
-                .cacheOnDisk(false)
-                .cacheInMemory(false)
-                .build();
-        ImageLoaderConfiguration.Builder config = new ImageLoaderConfiguration.Builder(getActivity());
-
-        config.threadPriority(Thread.NORM_PRIORITY - 2);
-        config.denyCacheImageMultipleSizesInMemory();
-        //  config.memoryCache(new LRULimitedMemoryCache(50*1024*1024));
-        //   config.diskCacheFileNameGenerator(new Md5FileNameGenerator());
-        //   config.diskCacheSize(50*1024*1024); // 50 MiB
-        config.tasksProcessingOrder(QueueProcessingType.LIFO);
-        config.defaultDisplayImageOptions(defaultOptions);
-//        config.writeDebugLogs(); // Remove for release app
-        // Initialize ImageLoader with configuration.
-        ImageLoader.getInstance().init(config.build());
-    }
-
     public interface HandleBackFilter {
         void backPressFilter(Bitmap bitmap);
-        void onFilterExit();
     }
-
-
 }

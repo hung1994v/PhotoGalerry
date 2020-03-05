@@ -48,8 +48,8 @@
 
             <ImageView
                 android:id="@+id/btn_back"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"
+                android:layout_width="@dimen/_24sdp"
+                android:layout_height="@dimen/_24sdp"
                 android:layout_marginLeft="@dimen/margin_small_size"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/_3sdp"
@@ -70,12 +70,12 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/btn_back"
-                app:layout_constraintEnd_toStartOf="@+id/btn_more"
+                app:layout_constraintEnd_toStartOf="@+id/btn_details"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"/>
 
             <ImageView
-                android:id="@+id/btn_more"
+                android:id="@+id/btn_details"
                 android:layout_width="@dimen/_26sdp"
                 android:layout_height="@dimen/_26sdp"
                 android:layout_marginRight="@dimen/margin_small_size"

@@ -1,0 +1,229 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container_library"
+    android:layout_width="match_parent"
+    android:background="@color/black"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_50sdp"
+        android:layout_alignParentTop="true"
+        android:background="@color/s_black"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/btn_library_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:tint="@color/white"
+                android:layout_width="@dimen/_20sdp"
+                android:layout_height="@dimen/_20sdp"
+                android:layout_margin="@dimen/_10sdp"
+                android:src="@drawable/ic_back" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <TextView
+            android:id="@+id/title_lib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/edit"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="@dimen/_14ssp"
+            android:layout_toRightOf="@+id/btn_library_exit"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="@dimen/_10sdp"/>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:visibility="gone"
+            android:id="@+id/btn_library_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="@dimen/_18sdp"
+            android:layout_toLeftOf="@+id/btn_library_save"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="@dimen/_24sdp"
+                android:layout_height="@dimen/_24sdp"
+                android:layout_margin="@dimen/_10sdp"
+                android:src="@drawable/ic_reset" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <TextView
+            android:layout_marginEnd="@dimen/small"
+            android:id="@+id/btn_library_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextViewSave"
+            android:text="@string/save"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"/>
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/container_photo"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/topBar"
+        android:layout_centerInParent="true"
+        android:layout_centerVertical="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginBottom="@dimen/_100sdp">
+
+        <com.photo.splashfunphoto.ui.custtom.CollageView
+            android:id="@+id/collageview_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:id="@+id/img_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:adjustViewBounds="true" />
+        </com.photo.splashfunphoto.ui.custtom.CollageView>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/container_menu_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+            <LinearLayout
+                android:background="@color/s_black"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_weight="1"
+                    android:id="@+id/btn_Overlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    style="@style/StyleButtonMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        style="@style/StyleIconButtonMenu"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_tools" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/tools"
+                        style="@style/StyleTextButtonMenu"/>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_weight="1"
+                    android:id="@+id/btn_Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    style="@style/StyleButtonMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        style="@style/StyleIconButtonMenu"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_filter" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/filter"
+                        style="@style/StyleTextButtonMenu"/>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_weight="1"
+                    android:id="@+id/btn_Edit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    style="@style/StyleButtonMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        style="@style/StyleIconButtonMenu"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_edit" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/edit"
+                        style="@style/StyleTextButtonMenu" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_weight="1"
+                    android:id="@+id/btn_sticker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    style="@style/StyleButtonMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        style="@style/StyleIconButtonMenu"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_btn_sticker" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/sticker"
+                        style="@style/StyleTextButtonMenu" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_weight="1"
+                    android:id="@+id/btn_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    style="@style/StyleButtonMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        style="@style/StyleIconButtonMenu"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_txt_collage" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/text"
+                        style="@style/StyleTextButtonMenu" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </LinearLayout>
+    </FrameLayout>
+</RelativeLayout>

@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none"
-        android:background="@color/colorPrimaryDark"/>
+        android:background="@color/black"/>
 
     <androidx.recyclerview.widget.RecyclerView
         app:layout_constraintTop_toTopOf="parent"
@@ -20,5 +20,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none"
-        android:background="@color/colorPrimaryDark"/>
+        android:background="@color/black"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

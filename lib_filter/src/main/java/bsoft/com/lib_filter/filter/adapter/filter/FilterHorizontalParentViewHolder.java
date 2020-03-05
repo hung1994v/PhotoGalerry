@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.bumptech.glide.Glide;
 
 import bsoft.com.lib_filter.R;
 import bsoft.com.lib_filter.filter.recycler.ParentViewHolder;
@@ -31,18 +31,10 @@ public class FilterHorizontalParentViewHolder extends ParentViewHolder {
                 }
             }
         });
-
-        final Context context = itemView.getContext();
-        itemView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
     }
 
     public void bind(String path) {
-        ImageLoader.getInstance().displayImage("assets://" + path, imgParent);
+//        ImageLoader.getInstance().displayImage("assets://" + path, imgParent);
     }
 
     @SuppressLint("NewApi")

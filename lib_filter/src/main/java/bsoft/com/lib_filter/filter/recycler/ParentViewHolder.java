@@ -90,7 +90,7 @@ public class ParentViewHolder<P extends Parent<C>, C> extends RecyclerView.ViewH
     }
 
     @UiThread
-    protected void expandView() {
+    public void expandView() {
         setExpanded(true);
         onExpansionToggled(false);
 

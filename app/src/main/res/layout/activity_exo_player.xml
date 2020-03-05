@@ -20,16 +20,61 @@
             app:controller_layout_id="@layout/exo_playback_control_view" />
 
     </FrameLayout>
-
-    <androidx.appcompat.widget.Toolbar
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:padding="@dimen/_10sdp"
+        android:visibility="visible"
+        android:background="#80000000"
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/layout_ad_banner_top"
-        android:background="#80000000"
-        android:visibility="gone"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/btn_back"
+            android:tint="@color/white"
+            android:padding="@dimen/_3sdp"
+            android:layout_width="@dimen/_24sdp"
+            android:layout_height="@dimen/_24sdp"
+            android:layout_marginLeft="@dimen/margin_small_size"
+            android:src="@drawable/ic_back"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+            app:layout_constraintLeft_toLeftOf="@+id/toolbar"
+            app:layout_constraintTop_toTopOf="@+id/toolbar" />
+        <ImageView
+            android:layout_marginEnd="@dimen/_20sdp"
+            android:background="?attr/selectableItemBackground"
+            android:padding="@dimen/_3sdp"
+            android:src="@drawable/ic_rename"
+            android:id="@+id/btn_rename"
+            app:layout_constraintTop_toTopOf="@id/toolbar"
+            app:layout_constraintBottom_toBottomOf="@id/toolbar"
+            app:layout_constraintEnd_toStartOf="@+id/btn_details"
+            android:layout_width="@dimen/_22sdp"
+            android:layout_height="@dimen/_22sdp">
+        </ImageView>
+        <ImageView
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@color/white"
+            android:padding="@dimen/_3sdp"
+            android:layout_width="@dimen/_24sdp"
+            android:layout_height="@dimen/_24sdp"
+            android:id="@+id/btn_details"
+            android:layout_marginRight="@dimen/_10sdp"
+            android:src="@drawable/ic_details"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+            app:layout_constraintRight_toRightOf="@+id/toolbar"
+            app:layout_constraintTop_toTopOf="@+id/toolbar" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+<!--    <androidx.appcompat.widget.Toolbar-->
+<!--        android:id="@+id/toolbar"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@+id/layout_ad_banner_top"-->
+<!--        android:background="#80000000"-->
+<!--        android:visibility="gone"-->
+<!--        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->
+<!--        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />-->
 
     <LinearLayout
         android:id="@+id/layout_backward"

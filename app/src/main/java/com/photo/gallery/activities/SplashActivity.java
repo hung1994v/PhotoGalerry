@@ -12,12 +12,19 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
 
+import com.bsoft.core.AdmobFull;
+import com.bsoft.core.BRateApp;
+import com.bsoft.core.PreloadNativeAdsList;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.photo.gallery.R;
 import com.photo.gallery.databinding.ActivityContentBinding;
 import com.photo.gallery.databinding.ActivitySplashBinding;
+import com.photo.gallery.fragments.PremissionFragment;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.ConstValue;
 import com.photo.gallery.utils.Flog;
@@ -28,6 +35,7 @@ import com.photo.gallery.utils.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -41,49 +49,81 @@ import static com.photo.gallery.utils.ConstValue.VIDEO_EDIT_URI_KEY;
  * Created by Hoavt on 3/15/2018.
  */
 
-public class SplashActivity extends AppCompatActivity  {
+public class SplashActivity extends AppCompatActivity implements PremissionFragment.onPermissionListener {
     private ActivitySplashBinding binding;
+    private static final int NUMBER_OF_ADS = 3;
+
+    private int numberNativeAdsLoaded = 0;
+
+
+    private InterstitialAd mInterstitialAd;
 
 
     private static final java.lang.String TAG = SplashActivity.class.getSimpleName();
     private Handler mWaitHandler = new Handler();
     private ProgressDialog progressDialog = null;
-    private String[] perm ={Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private String[] perm = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private boolean isGettingData = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = DataBindingUtil.setContentView(this,R.layout.activity_splash);
-        if(EasyPermissions.hasPermissions(this, perm)){
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_splash);
+        if (EasyPermissions.hasPermissions(this, perm)) {
+            Flog.d("AAAAAAAAAAAA", "111111111");
+            loadNativeAds();
             loadFromGallery();
-//            initAdmob();
-        }else {
+        } else {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intent);
-                    intent.putExtra(SPLASH_INTENT, false);
-                    finish();
+                    getSupportFragmentManager().beginTransaction().add(R.id.root_slpash, PremissionFragment.newInstance(SplashActivity.this)).addToBackStack(PremissionFragment.class.getSimpleName()).commit();
+                    Flog.d("AAAAAAAAAAAA", "2222222");
+
                 }
-            },500);
+            }, 1000);
 
         }
 
 
-//        initDialog();
-//        applyColor();
+    }
 
+    private void loadNativeAds() {
+        AdLoader.Builder builder = new AdLoader.Builder(this, getString(R.string.native_admob_id));
+        AdLoader adLoader = builder.forUnifiedNativeAd(
+                unifiedNativeAd -> {
+                    PreloadNativeAdsList.getInstance().add(unifiedNativeAd);
+                    numberNativeAdsLoaded++;
+                })
+                .withAdListener(new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        numberNativeAdsLoaded = NUMBER_OF_ADS;
+                    }
+                }).build();
 
+        adLoader.loadAds(new AdRequest.Builder().build(), NUMBER_OF_ADS);
     }
 
 
 
+
     private void loadFromGallery() {
+        Flog.d("AAAAAAAAAAAA", "444444");
+
+        if (isGettingData) {
+            return;
+        }
+
+        isGettingData = true;
 
 //        showDialog();
+//        mWaitHandler.removeCallbacksAndMessages(null);
         mWaitHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
+
+
 
                 //The following code will execute after the 2 seconds.
 
@@ -95,20 +135,20 @@ public class SplashActivity extends AppCompatActivity  {
 
                     ArrayList<FileItem> listAllMediaSdcard = new ArrayList<>();
                     GalleryUtil.getAllMediaSdcard(SplashActivity.this, listAllMediaSdcard);
-                    Flog.d(TAG, "SIZE listAllMediaSdcard="+listAllMediaSdcard.size());
+                    Flog.d(TAG, "SIZE listAllMediaSdcard=" + listAllMediaSdcard.size());
                     ArrayList<FileItem> listAllImgsSdcard = new ArrayList<>();
                     ArrayList<FileItem> listAllVideosSdcard = new ArrayList<>();
                     for (int i = 0; i < listAllMediaSdcard.size(); i++) {
                         FileItem item = listAllMediaSdcard.get(i);
                         if (item.isImage) {
-                                                                                                                                                                                                                                                                                                                                                                                                                           listAllImgsSdcard.add(item);
+                            listAllImgsSdcard.add(item);
                         } else {
                             listAllVideosSdcard.add(item);
                         }
                     }
                     listAllImgs.addAll(listAllImgsSdcard);
                     listAllVideos.addAll(listAllVideosSdcard);
-                    Flog.d(TAG, "SIZE SDCARD FILES="+listAllImgsSdcard.size()+"_"+listAllVideosSdcard.size()+"_"+listAllMediaSdcard.size());
+                    Flog.d(TAG, "SIZE SDCARD FILES=" + listAllImgsSdcard.size() + "_" + listAllVideosSdcard.size() + "_" + listAllMediaSdcard.size());
 
 
                     listAllFiles.addAll(listAllImgs);
@@ -149,9 +189,8 @@ public class SplashActivity extends AppCompatActivity  {
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     intent.putParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES, listAllFiles);
                     intent.putExtra(SPLASH_INTENT, true);
-
                     startActivity(intent);
-
+                    Flog.d("AAAAAAAAAAAA", "5555555");
                     //Let's Finish Splash Activity since we don't want to open this when user press back button.
                     finish();
                 } catch (Exception ignored) {
@@ -159,7 +198,7 @@ public class SplashActivity extends AppCompatActivity  {
                     ignored.printStackTrace();
                 }
             }
-        }, 800);  // Give a 2 seconds delay.
+        }, 1500);  // Give a 2 seconds delay.
     }
 
     @Override
@@ -184,5 +223,24 @@ public class SplashActivity extends AppCompatActivity  {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
+    }
+
+    @Override
+    public void onPermissionGranted() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.root_slpash);
+        if (fragment instanceof PremissionFragment) {
+            getSupportFragmentManager().popBackStack();
+            Flog.d("AAAAAAAAAAAA", "3333333");
+            loadFromGallery();
+        }
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().findFragmentById(R.id.root_slpash) instanceof PremissionFragment) {
+            finish();
+        } else
+            super.onBackPressed();
     }
 }

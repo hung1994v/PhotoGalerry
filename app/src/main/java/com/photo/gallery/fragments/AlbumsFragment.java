@@ -14,13 +14,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.halilibo.bettervideoplayer.utility.Util;
 import com.photo.gallery.BuildConfig;
 import com.photo.gallery.R;
 import com.photo.gallery.activities.HomeFragment;
@@ -41,6 +42,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_MAP;
+
 /**
  * Created by Hoavt on 3/15/2018.
  */
@@ -60,9 +64,9 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
     private HashMap<Integer, AlbumItem> listPositionChanged = new HashMap<>();
     private ProgressDialog progressDialog = null;
 
-    public static AlbumsFragment newInstance(HashMap<String, ArrayList<FileItem>> mListFolders) {
+    public static AlbumsFragment newInstance(Bundle bundle) {
         AlbumsFragment fragment = new AlbumsFragment();
-        fragment.mListFolders = mListFolders;
+        fragment.setArguments(bundle);
         return fragment;
     }
 
@@ -75,13 +79,16 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        getData();
         initDialog();
         initViews();
-        if (listener != null) {
-            listener.onAlbumsFragmentReady();
-        }
         initialize(mListFolders);
+    }
+
+    private void getData() {
+        if(getArguments()!=null){
+            this.mListFolders = (HashMap<String, ArrayList<FileItem>>) getArguments().getSerializable(EXTRA_LIST_ALL_MAP);
+        }
     }
 
     private void initViews() {
@@ -115,16 +122,24 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
         setValues();
     }
 
+
+
     private void setValues() {
 
         initList();
         mAdapter = new AlbumsAdapter(mContext, mListAlbums).setListener(this);
 
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
+        StaggeredGridLayoutManager glm = new StaggeredGridLayoutManager(ConstValue.NUM_OF_COLS_DAY_GRIDVIEW,StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(glm);
         mRecyclerView.setAdapter(mAdapter);
     }
-
+    private long getTotalSize(ArrayList<FileItem> mlistAlbum){
+        long size =0;
+        for(FileItem albumItem : mlistAlbum){
+            size = (size + albumItem.mSize);
+        }
+        return size;
+    }
     private void initList() {
 
         if (mListAlbums == null) {
@@ -135,14 +150,14 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
         for (Map.Entry<String, ArrayList<FileItem>> entry : mListFolders.entrySet()) {
             String key = entry.getKey();
             ArrayList<FileItem> items = mListFolders.get(key);
-
             FileItem firstItem = items.get(0);
 
             AlbumItem item = new AlbumItem();
             item.name = firstItem.folder;
-            item.size = String.valueOf(items.size());
+            item.mSize = getTotalSize(items);
             item.pathFirstImg = firstItem.path;
             item.alBumId = firstItem.folder_ID;
+            item.numFile = String.valueOf(items.size());
             mListAlbums.add(item);
             listSearch.add(item);
         }
@@ -156,7 +171,7 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
 
     @Override
     public void onItemAlbumClicked(int position, AlbumItem album) {
-        Flog.d("AAAAAAAAAA2", "album: "+ album.name + " size: "+ album.size + "position: "+ position + " sizeAlbum: "+ mListAlbums.size());
+        Flog.d("AAAAAAAAAA2", "album: "+ album.name + " size: "+ album.mSize + "position: "+ position + " sizeAlbum: "+ mListAlbums.size());
         if (FLAG_ADD_LONG_CLICK_EVENT) {
             if (listener != null) {
                 if (isLongClickedEvent) {
@@ -172,7 +187,6 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
                 List<String> indexes = new ArrayList<String>(mListFolders.keySet()); // <== Set to List
                 String key = indexes.get(position);
                 ArrayList<FileItem> items = mListFolders.get(key);
-
                 String nameAlbum = mListAlbums.get(position).name;
                 listener.onOpenAlbumViewer(nameAlbum, items);
             }
@@ -480,16 +494,18 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
             mListAlbums.clear();
         }
         for (AlbumItem fileItem: listSearch ){
+            if(fileItem!=null && fileItem.name!=null){
                 if(fileItem.name.toLowerCase().contains(newText.toLowerCase())){
                     mListAlbums.add(fileItem);
                 }
+            }
+
         }
         Flog.d("AAAAAAAAAA3","size album: " + mListAlbums.size());
         mAdapter.notifyDataSetChanged();
     }
 
     public interface OnAlbumsListener {
-        void onAlbumsFragmentReady();
 
         void onOpenAlbumViewer(String nameAlbum, ArrayList<FileItem> listFiles);
 

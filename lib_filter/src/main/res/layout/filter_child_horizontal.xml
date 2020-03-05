@@ -5,12 +5,8 @@
     android:layout_centerInParent="true">
 
     <bsoft.com.lib_filter.filter.border.BorderImageView
-        android:id="@+id/img_child"
-        android:layout_width="60dp"
-        android:layout_height="70dp" />
-
-    <bsoft.com.lib_filter.filter.border.BorderImageView
         android:id="@+id/filter_img_child"
         android:layout_width="60dp"
-        android:layout_height="70dp" />
+        android:layout_height="70dp"
+        android:layout_marginRight="@dimen/x_small"/>
 </RelativeLayout>

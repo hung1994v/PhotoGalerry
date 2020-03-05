@@ -5,9 +5,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -32,12 +36,17 @@ import com.photo.gallery.utils.DbUtils;
 import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
 import com.photo.gallery.utils.GalleryUtil;
+import com.photo.gallery.utils.SharedPrefUtil;
 import com.photo.gallery.utils.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_MAP;
+import static com.photo.gallery.utils.ConstValue.NUM_OF_COLS_DAY_GRIDVIEW;
 
 
 /**
@@ -53,7 +62,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     private ArrayList<FileItem> mListAllImgs = new ArrayList<>();
     private ArrayList<FileItem> listSearch = new ArrayList<>();
     private Map<String, ArrayList<FileItem>> mListAllImgSections = new HashMap<>();
-    private Map<String, ArrayList<FileItem>> mListAllsearch=  new HashMap<>();
+    private Map<String, ArrayList<FileItem>> mListAllsearch = new HashMap<>();
     private OnPhotoListener listener = null;
     private SectionedRecyclerViewAdapter sectionAdapter = null;
     private boolean isLongClickedEvent = false;
@@ -61,44 +70,42 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     private CoordinatorLayout mCoordinatorLayout = null;
     private ProgressDialog progressDialog = null;
     private LayoutGridviewPhotoBinding binding;
+    public static final int DAY_VIEW = 0;
+    public static  final int MONTH_VIEW = 1;
 
-    public static PhotoFragment newInstance(ArrayList<FileItem> listAllImgs, Map<String, ArrayList<FileItem>> listAllImgSections) {
+    public static PhotoFragment newInstance(Bundle bundle) {
         PhotoFragment fragment = new PhotoFragment();
-        fragment.mListAllImgs = listAllImgs;
-        fragment.listSearch = listAllImgs;
-        fragment.mListAllImgSections = listAllImgSections;
+        fragment.setArguments(bundle);
         return fragment;
     }
+
+    
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, R.layout.layout_gridview_photo,container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.layout_gridview_photo, container, false);
         return binding.getRoot();
     }
-
 
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        getData();
         initDialog();
         initViews();
-        initialize(mListAllImgs,mListAllImgSections);
-    }
-
-
-    public void initialize(ArrayList<FileItem> listAllImgs, Map<String, ArrayList<FileItem>> listAllImgSections) {
-        mListAllImgs = listAllImgs;
-        mListAllImgSections = listAllImgSections;
-//        if (mListAllImgs == null || mListAllImgSections == null) {
-//            return;
-//        }
-
-//        Flog.d("FFFFFFF", "list photo size=" + mListAllImgs.size() + "_" + mListAllImgSections.size());
-
         setValues();
-
     }
+
+    private void getData() {
+        if(getArguments()!=null){
+            this.mListAllImgs = getArguments().getParcelable(EXTRA_LIST_ALL_FILES);
+            this.listSearch = getArguments().getParcelable(EXTRA_LIST_ALL_FILES);
+            this.mListAllImgSections = (Map<String, ArrayList<FileItem>>) getArguments().getSerializable(EXTRA_LIST_ALL_MAP);
+        }
+    }
+
 
     private void setValues() {
 
@@ -113,33 +120,38 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             String key = entry.getKey();
             ArrayList<FileItem> items = mListAllImgSections.get(key);
 
-            MySection section = new MySection(index, mContext, key, items,false).setListener(this);
+            MySection section = new MySection(index, mContext, key, items, false).setListener(this);
             sectionAdapter.addSection(section);
 
             index++;
         }
 
         // Set up your RecyclerView with the SectionedRecyclerViewAdapter
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
-        glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-            @Override
-            public int getSpanSize(int position) {
-                switch (sectionAdapter.getSectionItemViewType(position)) {
-                    case SectionedRecyclerViewAdapter.VIEW_TYPE_HEADER:
-                        return ConstValue.NUM_OF_COLS_GRIDVIEW;
-                    default:
-                        return 1;
-                }
-            }
-        });
-        mRecyclerView.setLayoutManager(glm);
+
+        mRecyclerView.setLayoutManager(getLayoutManager());
         mRecyclerView.setAdapter(sectionAdapter);
+    }
+
+    private GridLayoutManager getLayoutManager() {
+            GridLayoutManager glm = new GridLayoutManager(mContext, SharedPrefUtil.getInstance().getInt(ConstValue.COLUM_GIRD_NUMBER,NUM_OF_COLS_DAY_GRIDVIEW));
+            glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    switch (sectionAdapter.getSectionItemViewType(position)) {
+                        case SectionedRecyclerViewAdapter.VIEW_TYPE_HEADER:
+                            return SharedPrefUtil.getInstance().getInt(ConstValue.COLUM_GIRD_NUMBER,NUM_OF_COLS_DAY_GRIDVIEW);
+                        default:
+                            return 1;
+                    }
+                }
+            });
+            return glm;
     }
 
     private void initViews() {
 
         View viewParent = getView();
-        if (viewParent==null) {
+        if (viewParent == null) {
             return;
         }
         viewParent.setOnClickListener(new View.OnClickListener() {
@@ -189,7 +201,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         }
         sectionAdapter.notifyItemChanged(positionInAdapter);
 
-        if(listPositionChanged.size()<=0) {
+        if (listPositionChanged.size() <= 0) {
             MySection.unAllSelected = true;
         }
         listener.onItemInPhotoClicked(file, listPositionChanged.size());
@@ -209,7 +221,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             if (!isLongClickedEvent) {
                 int positionInAdapter = getPositionInAdapter(index, position);
                 listPositionChanged.put(Integer.valueOf(positionInAdapter), file);
-                Flog.d(TAG, "isLongClickedEvent:p1="+index+"_p2="+position+"_clicked="+positionInAdapter);
+                Flog.d(TAG, "isLongClickedEvent:p1=" + index + "_p2=" + position + "_clicked=" + positionInAdapter);
                 sectionAdapter.notifyItemChanged(positionInAdapter);
 
                 listener.onItemInPhotoLongClicked(file);
@@ -223,7 +235,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     public void printList(HashMap<Integer, FileItem> map) {
         for (Map.Entry<Integer, FileItem> entry : map.entrySet()) {
             int index = entry.getKey();
-            Flog.d(TAG, "file map "+index+": "+index+"_file: "+entry.getValue());
+            Flog.d(TAG, "file map " + index + ": " + index + "_file: " + entry.getValue());
         }
     }
 
@@ -251,9 +263,9 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 //        sectionAdapter.notifyDataSetChanged();
 
         if (false) {
-            Flog.d(TAG, "before load: "+System.currentTimeMillis());
+            Flog.d(TAG, "before load: " + System.currentTimeMillis());
             addAllPosChanged();
-            Flog.d(TAG, "after load: "+System.currentTimeMillis());
+            Flog.d(TAG, "after load: " + System.currentTimeMillis());
         } else {
             showDialog();
             SelectAllTask task = new SelectAllTask(mContext, mListAllImgSections).setListener(this);
@@ -277,7 +289,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
             index++;
         }
-        Flog.d(TAG, "addAllPosChanged="+listPositionChanged.size());
+        Flog.d(TAG, "addAllPosChanged=" + listPositionChanged.size());
     }
 
     public void unselectAll() {
@@ -292,7 +304,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
         for (Map.Entry<Integer, FileItem> entry : listPositionChanged.entrySet()) {
             int changedIdx = entry.getKey();
-            Flog.d(TAG, "changedIdx is "+changedIdx);
+            Flog.d(TAG, "changedIdx is " + changedIdx);
             sectionAdapter.notifyItemChanged(changedIdx);
         }
 
@@ -310,7 +322,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         int len = listPositionChanged.size();
         FileItem[] items = new FileItem[len];
         int idx = 0;
-        for (Map.Entry<Integer, FileItem> entry: listPositionChanged.entrySet()) {
+        for (Map.Entry<Integer, FileItem> entry : listPositionChanged.entrySet()) {
             int key = entry.getKey();
             FileItem item = entry.getValue();
             items[idx] = item;
@@ -330,7 +342,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         int len = listPositionChanged.size();
         FileItem[] items = new FileItem[len];
         int idx = 0;
-        for (Map.Entry<Integer, FileItem> entry: listPositionChanged.entrySet()) {
+        for (Map.Entry<Integer, FileItem> entry : listPositionChanged.entrySet()) {
             int key = entry.getKey();
             FileItem item = entry.getValue();
             items[idx] = item;
@@ -339,7 +351,8 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         showDeleteDialog(mContext, listener, items);
     }
 
-    private void showDeleteDialog(final Context context, final OnFileDialogEventListener listener, final FileItem... items) {
+    private void showDeleteDialog(final Context context,
+                                  final OnFileDialogEventListener listener, final FileItem... items) {
 
         AlertDialog.Builder alert = new AlertDialog.Builder(context);
         String title = context.getString(R.string.delete);
@@ -386,7 +399,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
                         FileItem[] arrItems = new FileItem[list.size()];
                         for (int i = 0; i < list.size(); i++) {
-                            arrItems[i] =list.get(i);
+                            arrItems[i] = list.get(i);
                         }
                         if (listener != null) {
                             listener.onOk(arrItems);
@@ -395,7 +408,8 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
                 }).show();
     }
 
-    private void showDeleteDialog(final Context context, final OnDialogEventListener listener, final FileItem... fileItem) {
+    private void showDeleteDialog(final Context context, final OnDialogEventListener listener,
+                                  final FileItem... fileItem) {
 
         AlertDialog.Builder alert = new AlertDialog.Builder(context);
         String title = context.getString(R.string.delete);
@@ -449,21 +463,22 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
     @Override
     public void onSelectAllLoading(int positionInAdapter) {
-        int percent = positionInAdapter*100/(mListAllImgs.size()+mListAllImgSections.size());
-        progressDialog.setMessage(mContext.getString(R.string.selecting) +" "+percent + "%");
+        int percent = positionInAdapter * 100 / (mListAllImgs.size() + mListAllImgSections.size());
+        progressDialog.setMessage(mContext.getString(R.string.selecting) + " " + percent + "%");
         sectionAdapter.notifyItemChanged(positionInAdapter);
     }
 
     @Override
     public void onSelectAllFinished(HashMap<Integer, FileItem> listPositionChanged) {
         this.listPositionChanged = listPositionChanged;
-        Flog.d(TAG, "12 addAllPosChanged="+listPositionChanged.size());
+        Flog.d(TAG, "12 addAllPosChanged=" + listPositionChanged.size());
         hideDialog();
     }
 
-    public void updateUI(ArrayList<FileItem> listAllImgs, Map<String, ArrayList<FileItem>> listAllImgSections) {
+    public void updateUI
+            (ArrayList<FileItem> listAllImgs, Map<String, ArrayList<FileItem>> listAllImgSections) {
 
-        if (mRecyclerView==null || sectionAdapter == null) {
+        if (mRecyclerView == null || sectionAdapter == null) {
 //            setValues();
             Flog.d("FFFFFFFFF", "1recycler not init");
             return;
@@ -475,6 +490,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         if (mListAllImgs == null || mListAllImgSections == null) {
             return;
         }
+        mRecyclerView.setLayoutManager(getLayoutManager());
 
         sectionAdapter.removeAllSections();
         Flog.d(TAG, "12list photo size=" + mListAllImgs.size() + "_" + mListAllImgSections.size());
@@ -484,7 +500,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             String key = entry.getKey();
             ArrayList<FileItem> items = mListAllImgSections.get(key);
 
-            MySection section = new MySection(index, mContext, key, items,false).setListener(this);
+            MySection section = new MySection(index, mContext, key, items, false).setListener(this);
             sectionAdapter.addSection(section);
 
             index++;
@@ -493,7 +509,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     }
 
     public boolean shareFilesSelected() {
-        if (listPositionChanged==null||listPositionChanged.size()<=0) {
+        if (listPositionChanged == null || listPositionChanged.size() <= 0) {
             return false;
         }
         shareFilesByPos(listPositionChanged);
@@ -508,7 +524,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             int changedIdx = entry.getKey();
             FileItem fileItem = entry.getValue();
             Flog.d(TAG, "share changedIdx is " + changedIdx + "_" + fileItem.path);
-            uries[idx] = FileUtil.getUrifromFile(mContext,fileItem.path);
+            uries[idx] = FileUtil.getUrifromFile(mContext, fileItem.path);
             idx++;
         }
 
@@ -520,9 +536,6 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         return listPositionChanged;
     }
 
-    public void UpdateView(Map<String, ArrayList<FileItem>> mapAllImgSections) {
-        updateUI(mListAllImgs,mapAllImgSections);
-    }
 
     public void onBackPressed() {
         unselectAll();
@@ -530,9 +543,9 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
     public void search(String newText, boolean isDaySection) {
         ArrayList<FileItem> listFileFiltered = GalleryUtil.filterByNameFile(mListAllImgs, newText);
-        if(isDaySection){
+        if (isDaySection) {
             updateMap(GalleryUtil.groupListSectionByDate(listFileFiltered));
-        }else {
+        } else {
             updateMap(GalleryUtil.groupListSectionByMonth(listFileFiltered));
         }
 
@@ -544,7 +557,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             String key = entry.getKey();
             ArrayList<FileItem> items = mListAllImgSections.get(key);
 
-            MySection section = new MySection(index, mContext, key, items,false).setListener(this);
+            MySection section = new MySection(index, mContext, key, items, false).setListener(this);
             sectionAdapter.addSection(section);
 
             index++;
@@ -567,7 +580,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             String key = entry.getKey();
             ArrayList<FileItem> items = mListAllImgSections.get(key);
 
-            MySection section = new MySection(cnt, mContext, key, items,false).setListener(this);
+            MySection section = new MySection(cnt, mContext, key, items, false).setListener(this);
             sectionAdapter.addSection(section);
             cnt++;
         }
@@ -576,16 +589,17 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
         sectionAdapter.notifyDataSetChanged();
     }
 
-    public static ArrayList<FileItem> filterByNameFile(ArrayList<FileItem> listAllFiles, String textInput) {
+    public static ArrayList<FileItem> filterByNameFile
+            (ArrayList<FileItem> listAllFiles, String textInput) {
         ArrayList<FileItem> listFiltered = new ArrayList<>();
-        if (textInput==null||textInput.equals("")) {
+        if (textInput == null || textInput.equals("")) {
             return listFiltered;
         }
 
         for (int i = 0; i < listAllFiles.size(); i++) {
             FileItem file = listAllFiles.get(i);
-            Flog.d(TAG, "file.name at "+i+"="+file.name+"_textinput="+textInput);
-            if (file.name !=null && file.name.toLowerCase().contains(textInput.toLowerCase().trim())) {
+            Flog.d(TAG, "file.name at " + i + "=" + file.name + "_textinput=" + textInput);
+            if (file.name != null && file.name.toLowerCase().contains(textInput.toLowerCase().trim())) {
                 listFiltered.add(file);
             }
         }
@@ -594,7 +608,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     }
 
     public interface OnPhotoListener {
-        void onPhotoFragmentReady();
+
 
         void onItemInPhotoLongClicked(FileItem file);
 

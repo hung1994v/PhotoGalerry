@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
@@ -27,8 +28,11 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
     private static final String TAG = TextMoreBackgroundFragment.class.getSimpleName();
     private RecyclerView rvBgPattern, rvBgColor;
     private OnTextMoreBackgroundListener listener;
-    private ArrayList<String> listBgPattern = null;
+//    private ArrayList<String> listBgPattern = null;
     private ArrayList<Integer> listBgColor = null;
+    private ArrayList<String> mListPattern1  = new ArrayList<>();
+    private ArrayList<String> mListPattern2  = new ArrayList<>();
+    public static final int SIZE_PATTERN_TEXT = 28;
 
     @Nullable
     @Override
@@ -53,10 +57,10 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
         LinearLayoutManager lm = new LinearLayoutManager(mContext, LinearLayoutManager.HORIZONTAL, false);
         rvBgPattern.setLayoutManager(lm);
 
-        setBgPatternList(getListBackground());
+        getListBackground();
 
-        if (listBgPattern != null) {
-            MoreBackgroundAdapter adapterBackground = new MoreBackgroundAdapter(mContext, listBgPattern);
+        if (mListPattern1 != null && mListPattern2!=null) {
+            MoreBackgroundAdapter adapterBackground = new MoreBackgroundAdapter(mContext);
             rvBgPattern.setAdapter(adapterBackground);
         }
 
@@ -89,21 +93,29 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
         return this;
     }
 
-    public void setBgPatternList(ArrayList<String> listBgPattern) {
-        this.listBgPattern = listBgPattern;
-    }
+//    public void setBgPatternList(ArrayList<String> listBgPattern) {
+//        this.listBgPattern = listBgPattern;
+//    }
 
-    public ArrayList<String> getListBackground() {
-
-        final int sizeBg = 13;
-        final String nameFormated = "ic_bag_%d.png";
-
-        ArrayList<String> list = new ArrayList<>(sizeBg);
-
-        for (int i = 0; i < sizeBg; i++) {
-            list.add("ic_bag_" + i + ".png");   //String.format(nameFormated, i) depend on languages.
+    public void getListBackground() {
+        for (int i = 1; i <= SIZE_PATTERN_TEXT ; i++) {
+            if (i <= 14) {
+                mListPattern1.add("bg/ic_bag_" + i + ".jpg");
+            } else {
+                mListPattern2.add("bg/ic_bag_" + i + ".jpg");
+            }
         }
-        return list;
+
+//        final int sizeBg = 13;
+//        final String nameFormated = "ic_bag_%d.png";
+//
+//        ArrayList<String> list = new ArrayList<>(sizeBg);
+//
+//        for (int i = 0; i < sizeBg; i++) {
+//            list.add("ic_bag_" + i + ".png");   //String.format(nameFormated, i) depend on languages.
+//        }
+//        return list;
+//        return
     }
 
     public interface OnTextMoreBackgroundListener {
@@ -114,12 +126,10 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
 
     private class MoreBackgroundAdapter extends RecyclerView.Adapter<MoreBackgroundAdapter.ViewHolder> {
         private Context mContext = null;
-        private List<String> mList;
         private int size;
 
-        public MoreBackgroundAdapter(Context context, ArrayList<String> list) {
+        public MoreBackgroundAdapter(Context context) {
             mContext = context;
-            mList = list;
             size = (int) mContext.getResources().getDimension(R.dimen.icon_size_standard);
         }
 
@@ -131,30 +141,63 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
 
         @Override
         public void onBindViewHolder(final MoreBackgroundAdapter.ViewHolder holder, final int position) {
-            Glide.with(mContext).load(Uri.parse("file:///android_asset/bg/" + mList.get(position))).into(holder.ivBg);
+//            Glide.with(mContext).load(Uri.parse("file:///android_asset/bg/" + mList.get(position))).into(holder.ivBg);
+//
+//            String path1 = "file:///android_asset/" + mListPattern1.get(position);
+//            Glide.with(mContext)
+//                    .asBitmap()
+//                    .load(path1)
+//                    .into(holder.imageView1);
+//
+//            String path2 = "file:///android_asset/" + mListPattern2.get(position);
+//            Glide.with(mContext)
+//                    .asBitmap()
+//                    .load(path2)
+//                    .into(holder.imageView2);
+            String path1 = "file:///android_asset/" + mListPattern1.get(position);
+            Glide.with(mContext)
+                    .asBitmap()
+                    .load(path1)
+                    .into(holder.ivBg1);
 
-            holder.ivBg.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (listener != null) {
-                        listener.onTextBackgroundSelected(mList.get(position));
-                    }
+            String path2 = "file:///android_asset/" + mListPattern2.get(position);
+            Glide.with(mContext)
+                    .asBitmap()
+                    .load(path2)
+                    .into(holder.ivBg2);
+
+
+            final String mPatternFileName1 = mListPattern1.get(position);
+            final String mPatternFileName2 = mListPattern2.get(position);
+
+            holder.ivBg1.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onTextBackgroundSelected(mPatternFileName1);
                 }
             });
+
+            holder.ivBg2.setOnClickListener(v -> {
+                if(listener != null){
+                    listener.onTextBackgroundSelected(mPatternFileName2);
+                }
+            });
+
         }
 
         @Override
         public int getItemCount() {
-            return mList.size();
+            return mListPattern1.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
 
-            private CustomRoundImage ivBg;
+            private CustomRoundImage ivBg1;
+            private CustomRoundImage ivBg2;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                ivBg = (CustomRoundImage) itemView.findViewById(R.id.iv_background_editor);
+                ivBg1 = (CustomRoundImage) itemView.findViewById(R.id.imgPatternText1);
+                ivBg2 = (CustomRoundImage) itemView.findViewById(R.id.imgPatternText2);
             }
         }
     }
@@ -172,7 +215,7 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
 
         @Override
         public MoreBackgroundColorAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(mContext).inflate(R.layout.item_more_background, null, false);
+            View view = LayoutInflater.from(mContext).inflate(R.layout.list_color_text_adapter, null, false);
             return new MoreBackgroundColorAdapter.ViewHolder(view);
         }
 
@@ -198,11 +241,11 @@ public class TextMoreBackgroundFragment extends BaseStickerFragment {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
 
-            private CustomRoundImage ivBg;
+            private ImageView ivBg;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                ivBg = (CustomRoundImage) itemView.findViewById(R.id.iv_background_editor);
+                ivBg =  itemView.findViewById(R.id.imgTextColor);
             }
         }
     }

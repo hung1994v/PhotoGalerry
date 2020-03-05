@@ -12,6 +12,8 @@ import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
@@ -132,7 +134,7 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
         initList();
         mAdapter = new AlbumsAdapter(mContext, mListAlbums).setListener(this);
 
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
+        StaggeredGridLayoutManager glm = new StaggeredGridLayoutManager(ConstValue.NUM_OF_COLS_DAY_GRIDVIEW,StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(glm);
         mRecyclerView.setAdapter(mAdapter);
 
@@ -159,13 +161,22 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
 
             AlbumItem item = new AlbumItem();
             item.name = firstItem.folder;
-            item.size = String.valueOf(items.size());
+            item.mSize = getTotalSize(items);
             item.pathFirstImg = firstItem.path;
+            item.alBumId = firstItem.folder_ID;
+            item.numFile = String.valueOf(items.size());
             mListAlbums.add(item);
         }
         Flog.d(TAG, "size albums=" + mListAlbums.size());
     }
 
+    private long getTotalSize(ArrayList<FileItem> mlistAlbum){
+        long size =0;
+        for(FileItem albumItem : mlistAlbum){
+            size = (size + albumItem.mSize);
+        }
+        return size;
+    }
     public SelectAlbumFragment setListener(OnSelectAlbumListener listener) {
         this.listener = listener;
         return this;
@@ -271,19 +282,7 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
         }
     }
 
-    public static InputFilter filter = (source, start, end, dest, dstart, dend) -> {
 
-        for (int i = start;i < end;i++) {
-            if (!Character.isLetterOrDigit(source.charAt(i)) &&
-                    !Character.toString(source.charAt(i)).equals("_") &&
-                    !Character.toString(source.charAt(i)).equals("-") &&
-                    !Character.toString(source.charAt(i)).equals(" "))
-            {
-                return "";
-            }
-        }
-        return null;
-    };
 
 
     private void openDialogInputNameAlbum() {
@@ -301,7 +300,7 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
 
         final EditText userInput = (EditText) promptsView
                 .findViewById(R.id.editTextDialogUserInput);
-        userInput.setFilters(new InputFilter[]{filter});
+        userInput.setFilters(new InputFilter[]{Utils.filter});
 
 
         // set dialog message

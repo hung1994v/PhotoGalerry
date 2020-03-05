@@ -261,7 +261,6 @@ public class SquareUiLidowFilterManager implements WBManager {
     }
 
     public WBRes getRes(int pos) {
-        Log.d("ttttttttt ", " " + resList.get(pos));
         return resList.get(pos);
     }
 

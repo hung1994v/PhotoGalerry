@@ -26,9 +26,19 @@ import bsoft.healthy.tracker.menstrual.lib_sticker.utils.FontUtil;
 public class TextMoreFontFragment extends BaseStickerFragment {
     private static final String TAG = TextMoreFontFragment.class.getSimpleName();
     private static final String[] NAME_CUSTOM_FONTS = new String[]{
-            "Coiny-regular",
+            "Bambi",
+            "Cafe rojo",
             "Champagne & limousines",
-            "Digs my hart"
+            "Digs my hart",
+            "Doris day",
+            "Duality",
+            "Fairfax station",
+            "Honey script",
+            "Romance fatal serif",
+            "Lobster",
+            "Missed your exit",
+            "Lauren script",
+            "Mom's typewriter"
     };
     private RecyclerView recyclerView = null;
     private TextFontAdapter adapter = null;
@@ -47,7 +57,7 @@ public class TextMoreFontFragment extends BaseStickerFragment {
         fontList = new ArrayList<>();
         setLocalFonts();
         setCustomFonts();
-        initRecycleView();
+        initRecycleView(view);
         Log.d(TAG, "sizeall="+fontList.size());
 
         view.setOnClickListener(new View.OnClickListener() {
@@ -88,14 +98,14 @@ public class TextMoreFontFragment extends BaseStickerFragment {
         }
     }
 
-    private void initRecycleView() {
+    private void initRecycleView(View view) {
 
         adapter = new TextFontAdapter(mContext, fontList, NAME_CUSTOM_FONTS.length);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false);
-        recyclerView = (RecyclerView) getView().findViewById(R.id.recyclerview);
+//        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(new LinearLayoutManager(mContext));
+        recyclerView = view.findViewById(R.id.recyclerview);
 //        recyclerView.getLayoutParams().height = (int) getResources().getDimension(R.dimen.height_content_tablayout);
 
-        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         recyclerView.setAdapter(adapter);
     }
 

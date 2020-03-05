@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,11 +29,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.photo.gallery.R;
-import com.photo.gallery.activities.EditPhotoActivity;
 import com.photo.gallery.databinding.FragmentPhotoViewerBinding;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.ConstValue;
@@ -45,12 +41,15 @@ import com.photo.gallery.utils.Flog;
 import com.photo.gallery.utils.ResizeImage;
 import com.photo.gallery.utils.SharedPrefUtil;
 import com.photo.gallery.utils.Utils;
+import com.photo.splashfunphoto.EditPhotoActivity;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import bsoft.com.lib_filter.filter.gpu.util.BitmapUtil;
+import static android.app.Activity.RESULT_OK;
+import static com.photo.gallery.utils.ConstValue.DETAILS;
+import static com.photo.gallery.utils.ConstValue.RENAME;
 
 /**
  * Created by Tung on 3/23/2018.
@@ -64,8 +63,8 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
     private static final String TAG = PhotoViewerFragment.class.getSimpleName();
     private static final boolean FLAG_LOAD_GLIDE = false;
     private final boolean OLD_CODE = false;
-    private View btnBack, btnRotate, btnDelete, btnShare, btnMore;
-    private ImageView btnFavourite;
+    private View btnBack, btnRotate, btnDelete, btnShare, btnDetails, btnRename;
+    private ImageView btnFavourite, btn_info, btnSetAs;
     private TextView tvNamePhoto, tvDatePhoto;
     private FileItem mFileItem = null;
     private OnPhotoViewerListener listener = null;
@@ -92,8 +91,16 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
         mBottomSheetDialog = new BottomSheetDialog(mContext);
         mBottomSheetDialog.setContentView(getLayoutInflater().inflate(R.layout.bottom_set_wall, null));
         mBottomSheetDialog.show();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            mBottomSheetDialog.findViewById(R.id.home_screen).setVisibility(View.VISIBLE);
+            mBottomSheetDialog.findViewById(R.id.lock_screen).setVisibility(View.VISIBLE);
+        }else {
+            mBottomSheetDialog.findViewById(R.id.home_screen).setVisibility(View.GONE);
+            mBottomSheetDialog.findViewById(R.id.lock_screen).setVisibility(View.GONE);
+        }
+
         mBottomSheetDialog.findViewById(R.id.home_screen).setOnClickListener(v -> {
-            if(mFileItem.isImage){
+            if(mFileItem.isImage  ){
                 confirmSethome();
             }else {
                 CustomToast.showContent(mContext,mContext.getString(R.string.no_file_found));
@@ -314,14 +321,15 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
             WallpaperManager myWallpaperManager
                     = WallpaperManager.getInstance(mContext);
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if(mFileItem.path!=null){
-                        myWallpaperManager.setBitmap(getBitmapFromPath(mFileItem.path),null,true,WallpaperManager.FLAG_SYSTEM);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            myWallpaperManager.setBitmap(getBitmapFromPath(mFileItem.path),null,true,WallpaperManager.FLAG_SYSTEM);
+                        }
                     }else {
                         CustomToast.showContent(mContext,mContext.getString(R.string.no_file_found));
                     }
 
-                }
+
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -378,6 +386,24 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
             }
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Flog.d(TAG, "2onActivityResult=" + data + "_resultCode=" + resultCode);
+//        FLAG_RELOAD_GALLERY = false;
+        if (resultCode == RESULT_OK && requestCode == ConstValue.REQUEST_CODE_EDIT_PHOTO_ACTIVITY) {
+            listener.onSaveImageDone();
+//            ((PhotoViewerFragment) photoViewerFrag).updateImage();
+
+//            if (!FLAG_REFRESH_ENABLE) {
+//                refreshGallery();
+//            }
+//            showOptFrag(parentCurFragID);
+        }
+    }
+
+
 
 
     private void initViews() {
@@ -398,7 +424,9 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
 //        btnRotate = viewParent.findViewById(R.id.btn_rotate);
         btnDelete = viewParent.findViewById(R.id.btn_delete);
         btnShare = viewParent.findViewById(R.id.btn_share);
-        btnMore = viewParent.findViewById(R.id.btn_more);
+        btnDetails = viewParent.findViewById(R.id.btn_details);
+        btnRename = viewParent.findViewById(R.id.btn_rename);
+        btnSetAs = viewParent.findViewById(R.id.btn_set_as);
 
         tvNamePhoto = (TextView) viewParent.findViewById(R.id.tv_name_photo);
         tvDatePhoto = (TextView) viewParent.findViewById(R.id.tv_date_photo);
@@ -419,8 +447,8 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
         }
         updateImage();
 
-        String name = mFileItem.name;
-        setNamePhoto(name);
+//        String name = mFileItem.name;
+//        setNamePhoto(name);
 
         String dateFormated = DateUtils.getDate(Utils.parseLong(mFileItem.date_modified), DateUtils.FORMAT_DATE_2);
         setDatePhoto(dateFormated);
@@ -464,7 +492,9 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
 //        btnRotate.setOnClickListener(this);
         btnDelete.setOnClickListener(this);
         btnShare.setOnClickListener(this);
-        btnMore.setOnClickListener(this);
+        btnDetails.setOnClickListener(this);
+        btnRename.setOnClickListener(this);
+        btnSetAs.setOnClickListener(this);
     }
 
     public PhotoViewerFragment setListener(OnPhotoViewerListener listener) {
@@ -530,9 +560,9 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
                     listener.onSharePhotoViewerFragment(mFileItem);
                 }
                 break;
-            case R.id.btn_more:
+            case R.id.btn_details:
                 if (listener != null) {
-                    listener.onMorePhotoViewerFragment(mFileItem);
+                    listener.onMorePhotoViewerFragment(mFileItem,DETAILS );
                 }
                 break;
             case R.id.btn_edit:
@@ -541,6 +571,15 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
                 intent.putExtra(ConstValue.VIDEO_OPEN_WITH,false);
                 startActivityForResult(intent, ConstValue.REQUEST_CODE_EDIT_PHOTO_ACTIVITY);
                 break;
+            case R.id.btn_set_as:
+                showBottomDialog();
+                break;
+            case R.id.btn_rename:
+                if (listener != null) {
+                    listener.onMorePhotoViewerFragment(mFileItem,RENAME );
+                }
+                break;
+
         }
     }
 
@@ -625,24 +664,30 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
     }
 
     public void updateImage() {
-        String path = mFileItem.path;
+        if(!(mFileItem == null)){
+            String path = mFileItem.path;
+            binding.progressCircular.setVisibility(View.VISIBLE);
+            loadImage(mContext, binding.ivPhoto, path);
+        }
 
-        loadImage(mContext, binding.ivPhoto, path);
     }
 
     public void loadImage(Context context, final ImageView ivJpgPhoto, String photoPath) {
-        Glide.with(context).load(photoPath)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .skipMemoryCache(true)
-                .into(ivJpgPhoto);
+        new DecodeImageAsync(mContext).execute(photoPath);
+//        Glide.with(context).load(photoPath)
+//                .diskCacheStrategy(DiskCacheStrategy.NONE)
+//                .skipMemoryCache(true)
+//                .into(ivJpgPhoto);
     }
 
     public interface OnPhotoViewerListener {
+        void onSaveImageDone();
+
         void onPhotoViewerFragmentReady();
 
         void onBackPhotoViewerFragment();
 
-        void onMorePhotoViewerFragment(FileItem fileItem);
+        void onMorePhotoViewerFragment(FileItem fileItem, int action);
 
         void onSharePhotoViewerFragment(FileItem fileItem);
 
@@ -655,9 +700,42 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
         void onUpdateToFavouriteAlbum();
     }
 
+    private class DecodeImageAsync extends AsyncTask<String, Void, Bitmap> {
+
+        private Context mContext = null;
+
+        public DecodeImageAsync(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            String path = strings[0];
+            if (path == null || !new File(path).exists()) {
+                return null;
+            }
+
+            int widthScreen = Utils.getScreenSize(mContext)[0];
+            if (widthScreen <= 0) {
+                return null;
+            }
+//            return new ResizeImage(mContext).getBitmap(path, widthScreen);
+            DisplayMetrics mDisplayMetrics = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
+
+
+           return new ResizeImage(mContext).getBitmap(path, (mDisplayMetrics.widthPixels), mDisplayMetrics.heightPixels);
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            onPhotoLoaded(bitmap);
+        }
+    }
 
 
     private void onPhotoLoaded(Bitmap bitmap) {
+        binding.progressCircular.setVisibility(View.GONE);
         binding.ivPhoto.setImageBitmap(bitmap);
     }
 }

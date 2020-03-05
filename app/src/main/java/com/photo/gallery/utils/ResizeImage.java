@@ -1,5 +1,7 @@
 package com.photo.gallery.utils;
 
+
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -7,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.util.Log;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import java.io.FileInputStream;
@@ -17,7 +21,6 @@ import java.io.IOException;
 /**
  * Created by Adm on 9/7/2016.
  */
-
 
 public class ResizeImage {
     float orientation;
@@ -44,28 +47,66 @@ public class ResizeImage {
         return getResizedOriginalBitmap(imagePath, this.imageWidth, this.imageHeight);
     }
 
-    private void getAspectRatio(String selectedImagePath, int widthPixels, int height) {
+
+
+    private void getAspectRatio(String selectedImagePath, int desiredWidth, int desiredHeight) {
+        Options options = new Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(selectedImagePath, options);
+        float imgAspectRatio = (float)options.outWidth / (float)options.outHeight;
+        float desiredAspectRatio = (float)desiredWidth / (float)desiredHeight;
+
+        float xScale = 1.0f;
+        float yScale = 1.0f;
+        if (imgAspectRatio > desiredAspectRatio) {
+            yScale = desiredAspectRatio / imgAspectRatio;
+        } else {
+            xScale = imgAspectRatio / desiredAspectRatio;
+        }
+
+        int finalWidth = (int) (desiredWidth * xScale);
+        int finalHeight = (int) (desiredHeight * yScale);
+
+        this.imageWidth = (int) finalWidth;
+        this.imageHeight = (int) finalHeight;
+    }
+    private void getAspectRatio2(String selectedImagePath, int widthPixels, int height) {
         float scaleWidth;
         float scaleHeight;
-        BitmapFactory.Options options = new BitmapFactory.Options();
+        Options options = new Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(selectedImagePath, options);
         float scaleFactor = ((float) options.outWidth) / ((float) options.outHeight);
         if (scaleFactor < 1.0f) {
             scaleWidth = (float) widthPixels;
             scaleHeight = scaleWidth / scaleFactor;
+            if(scaleHeight > height){
+                float scaleDown = scaleHeight / height;
+                scaleHeight = height;
+                scaleWidth = scaleWidth/scaleDown;
+            }
+            Flog.d("xxxxxxxxxxxxxx1","s="+scaleWidth);
         } else {
             scaleHeight = (float) height;
             scaleWidth = scaleHeight * scaleFactor;
+            if(scaleWidth > widthPixels){
+                float scaleDown = scaleWidth / widthPixels;
+                scaleWidth = widthPixels;
+                scaleHeight = scaleHeight/scaleDown;
+            }
+            Flog.d("xxxxxxxxxxxxxx2","s="+scaleHeight);
         }
         this.imageWidth = (int) scaleWidth;
         this.imageHeight = (int) scaleHeight;
+
+        Flog.d("xxxxxxxxxxxxxx3","W="+imageWidth);
+        Flog.d("xxxxxxxxxxxxxx4","H="+imageHeight);
     }
 
     private void getAspectRatio(String selectedImagePath, int widthPixels) {
         float scaleWidth;
         float scaleHeight;
-        BitmapFactory.Options options = new BitmapFactory.Options();
+        Options options = new Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(selectedImagePath, options);
         float scaleFactor = ((float) options.outWidth) / ((float) options.outHeight);
@@ -82,7 +123,7 @@ public class ResizeImage {
 
     private Bitmap getResizedOriginalBitmap(String imagePath, int imagwidth, int imageheight) {
         try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
+            Options options = new Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(new FileInputStream(imagePath), null, options);
             int srcWidth = options.outWidth;
@@ -101,7 +142,7 @@ public class ResizeImage {
             options.inDither = false;
             options.inSampleSize = inSampleSize;
             options.inScaled = false;
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            options.inPreferredConfig = Config.ARGB_8888;
             sampledSrcBitmap = BitmapFactory.decodeStream(new FileInputStream(imagePath), null, options);
             if (sampledSrcBitmap == null) {
                 return null;

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/_150sdp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.photo.gallery.shape.RoundRectView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shape_roundRect_bottomLeftRadius="@dimen/_10sdp"
+        app:shape_roundRect_bottomRightRadius="@dimen/_10sdp"
+        app:shape_roundRect_topLeftRadius="@dimen/_10sdp"
+        app:shape_roundRect_topRightRadius="@dimen/_10sdp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#B3151617">
+            <EditText
+                android:id="@+id/edtTextFrame"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/tvAddTextFrame"
+                android:layout_marginStart="@dimen/_20sdp"
+                android:layout_marginEnd="@dimen/_20sdp"
+                android:textColor="@color/colorAccent"
+                android:hint="@string/enter_text"
+                android:textColorHint="@color/colorWhiteTrans"
+                android:textSize="@dimen/_14ssp"
+                />
+            <TextView
+                android:id="@+id/tvCancleTextFrame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_20sdp"
+                android:layout_alignParentBottom="true"
+                android:layout_toStartOf="@+id/tvAddTextFrame"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/_14ssp"
+                android:textStyle="bold"
+                android:text="@android:string/cancel"/>
+            <TextView
+                android:id="@+id/tvAddTextFrame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_20sdp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/_14ssp"
+                android:textStyle="bold"
+                android:text="@string/add"/>
+        </RelativeLayout>
+    </com.photo.gallery.shape.RoundRectView>
+
+</RelativeLayout>

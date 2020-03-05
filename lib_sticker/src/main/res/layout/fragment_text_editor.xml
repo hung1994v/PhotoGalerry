@@ -26,9 +26,10 @@
         android:layout_height="200dp" >
 
         <fragment
+            android:layout_gravity="center_horizontal"
             android:id="@+id/font_container"
             android:name="bsoft.healthy.tracker.menstrual.lib_sticker.fragments.TextMoreFontFragment"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"/>
 
         <fragment

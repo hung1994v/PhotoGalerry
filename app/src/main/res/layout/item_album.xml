@@ -5,9 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingBottom="@dimen/_10sdp"
     android:paddingRight="@dimen/_10sdp">
-
     <ImageView
-        android:src="@drawable/ic_no_image"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -15,7 +13,7 @@
         android:id="@+id/iv_first_of_album"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scaleType="centerCrop" />
+        />
     <RelativeLayout
         android:layout_marginTop="@dimen/_8sdp"
         app:layout_constraintTop_toBottomOf="@+id/iv_first_of_album"

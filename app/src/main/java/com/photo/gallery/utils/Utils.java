@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -29,6 +30,8 @@ import android.widget.TextView;
 
 
 import com.photo.gallery.R;
+
+import java.io.File;
 
 /**
  * Created by Hoavt on 3/15/2018.
@@ -61,6 +64,20 @@ public class Utils {
         return -1;
     }
 
+    public static InputFilter filter = (source, start, end, dest, dstart, dend) -> {
+
+        for (int i = start;i < end;i++) {
+            if (!Character.isLetterOrDigit(source.charAt(i)) &&
+                    !Character.toString(source.charAt(i)).equals("_") &&
+                    !Character.toString(source.charAt(i)).equals("-") &&
+                    !Character.toString(source.charAt(i)).equals(" "))
+            {
+                return "";
+            }
+        }
+        return null;
+    };
+
     public static long parseLong(String longInString) {
         try {
             return Long.parseLong(longInString.trim());
@@ -70,20 +87,7 @@ public class Utils {
         return -1;
     }
 
-    public static InputFilter filter = (source, start, end, dest, dstart, dend) -> {
 
-        for (int i = start;i < end;i++) {
-            if (!Character.isLetterOrDigit(source.charAt(i)) &&
-                    !Character.toString(source.charAt(i)).equals("_") &&
-                    !Character.toString(source.charAt(i)).equals("-") &&
-                    !Character.toString(source.charAt(i)).equals(" "))
-
-            {
-                return "";
-            }
-        }
-        return null;
-    };
 
     public static void rateApp(Context context) {
         Uri uri = Uri.parse("market://details?id=" + context.getPackageName());
@@ -166,6 +170,27 @@ public class Utils {
                         + " " + action, Snackbar.LENGTH_LONG);
         snackbar.show();
     }
+
+    public static String getResolution(String filePath){
+        File file = new File(filePath);
+        return getResolution(file);
+    }
+
+    private static String getResolution(File file){
+        try {
+            String string ="";
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            retriever.setDataSource(file.getPath());
+            int width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+            int height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            retriever.release();
+            return string = string+width+" x "+ height;
+        }catch (Exception e )
+        {
+            return ("Exception occurred");
+        }
+    }
+
 
     public static String milliSecondsToTimer(long milliseconds) {
         String finalTimerString = "";

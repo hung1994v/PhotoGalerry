@@ -21,6 +21,8 @@ import com.photo.gallery.R;
 import com.photo.gallery.adapters.FileAlbumAdapter;
 import com.photo.gallery.callback.OnFileDialogEventListener;
 import com.photo.gallery.databinding.LayoutGridviewFavoriteBinding;
+import com.photo.gallery.listener.OnVideoFavoriteListener;
+import com.photo.gallery.listener.VideoFavoriteRemoveCallback;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.ConstValue;
 import com.photo.gallery.utils.DbUtils;
@@ -37,7 +39,7 @@ import java.util.Map;
  * Created by Hoavt on 3/15/2018.
  */
 
-public class FavouriteFragment extends BaseFragment implements FileAlbumAdapter.OnAlbumsAdapterListener {
+public class FavouriteFragment extends BaseFragment implements FileAlbumAdapter.OnAlbumsAdapterListener, OnVideoFavoriteListener {
 
     private static final String TAG = FavouriteFragment.class.getSimpleName();
     private RecyclerView mRecyclerView = null;
@@ -74,7 +76,17 @@ public class FavouriteFragment extends BaseFragment implements FileAlbumAdapter.
         mAdapter = new FileAlbumAdapter(mContext, mList).setListener(this);
 
         // Set up your RecyclerView with the SectionedRecyclerViewAdapter
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
+//        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_DAY_GRIDVIEW);
+        GridLayoutManager  glm= new GridLayoutManager(mContext, 3);
+        glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (mAdapter.getItemViewType(position) == FileAlbumAdapter.NATIVE_AD_VIEW_TYPE)
+                    return 3; //some other form of item like a header, or whatever you need two spans for
+                else
+                    return 1; //normal item which will take up the normal span you defined in the gridlayoutmanager constructor
+            }
+        });
         mRecyclerView.setLayoutManager(glm);
         mRecyclerView.setAdapter(mAdapter);
     }
@@ -89,8 +101,8 @@ public class FavouriteFragment extends BaseFragment implements FileAlbumAdapter.
     }
 
     public void refreshList() {
+        Flog.d("FAVORITE","333333");
         showDialog();
-
         mList = DbUtils.parseFavourites();
         showNoFileFound(mList.size() <= 0);
         Flog.d(TAG, "size of favourites2=" + mList.size());
@@ -434,6 +446,11 @@ public class FavouriteFragment extends BaseFragment implements FileAlbumAdapter.
         }
 
         listener.onItemInFavouriteClicked(file, listPositionChanged.size());
+    }
+
+    @Override
+    public void onUpdateFavorite() {
+        refreshList();
     }
 
     public interface OnFavouriteListener {

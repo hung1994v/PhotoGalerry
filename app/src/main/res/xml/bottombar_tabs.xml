@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tabs>
     <tab
-        inActiveColor="#80323234"
+        inActiveColor="#7B7B7B"
         activeColor="#544eee"
         id="@+id/photo"
         icon="@drawable/ic_photo"
         title="@string/photo_tittle"
         />
     <tab
-        inActiveColor="#80323234"
+        inActiveColor="#7B7B7B"
+        activeColor="#544eee"
+        id="@+id/video"
+        icon="@drawable/ic_video"
+        title="@string/video_tittle"
+        />
+
+    <tab
+        inActiveColor="#7B7B7B"
         activeColor="#544eee"
         id="@+id/folder"
         icon="@drawable/ic_folder"

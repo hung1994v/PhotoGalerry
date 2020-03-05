@@ -20,7 +20,6 @@ import android.graphics.RectF;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
-import android.util.DisplayMetrics;
 
 
 import java.io.File;
@@ -33,8 +32,6 @@ import java.io.InputStream;
  * Created by Adm on 2/9/2017.
  */
 public class BitmapUtil {
-
-
     public static void free(Bitmap bitmap){
         try {
             if(bitmap != null && !bitmap.isRecycled()){
@@ -86,33 +83,33 @@ public class BitmapUtil {
         return Bitmap.createBitmap(bmp, 0, 0, width, height, matrix, true);
     }
 
-    public static Bitmap sampeZoomFromFile(String fileName, int maxSize, int maxSizeH) {
+    public static Bitmap sampeZoomFromFile(String fileName, int maxSize) {
         Bitmap bmp = sampledBitmapFromFile(fileName, maxSize, maxSize);
         if (bmp == null) {
             return null;
         }
-        Bitmap newBitmap = sampeZoomFromBitmap(bmp, maxSize, maxSizeH);
+        Bitmap newBitmap = sampeZoomFromBitmap(bmp, maxSize);
         if (bmp != newBitmap) {
             ourBitmapRecycle(bmp, false);
         }
         return newBitmap;
     }
 
-    public static Bitmap sampeZoomFromResource(Resources res, int resId, int maxSize, int maxSizeH) {
+    public static Bitmap sampeZoomFromResource(Resources res, int resId, int maxSize) {
         Bitmap bmp = sampledBitmapFromResource(res, resId, maxSize);
-        Bitmap newBitmap = sampeZoomFromBitmap(bmp, maxSize, maxSizeH);
+        Bitmap newBitmap = sampeZoomFromBitmap(bmp, maxSize);
         if (bmp != newBitmap) {
             ourBitmapRecycle(bmp, false);
         }
         return newBitmap;
     }
 
-    public static Bitmap sampeZoomFromBitmap(Bitmap bmp, int maxSizeW, int maxSizeH) {
+    public static Bitmap sampeZoomFromBitmap(Bitmap bmp, int maxSize) {
         float rate;
         int width = bmp.getWidth();
         int height = bmp.getHeight();
-        float rateH = ((float) maxSizeW) / ((float) width);
-        float rateW = ((float) maxSizeH) / ((float) height);
+        float rateH = ((float) maxSize) / ((float) width);
+        float rateW = ((float) maxSize) / ((float) height);
         if (rateH < rateW) {
             rate = rateH;
         } else {

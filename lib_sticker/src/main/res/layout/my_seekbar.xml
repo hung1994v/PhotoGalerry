@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="@dimen/margin_xsmall_size">
+    android:padding="@dimen/normal">
 
     <TextView
         android:id="@+id/tv_label"

@@ -1,9 +1,12 @@
 package bsoft.com.lib_filter.filter.adapter.filter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import androidx.annotation.NonNull;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,22 +27,26 @@ import bsoft.com.lib_filter.filter.model.FilterHorizontalParent;
 
 public class HorizontalExpandableAdapter extends ExpandableRecyclerAdapter<FilterHorizontalParent, FilterHorizontalChild, FilterHorizontalParentViewHolder, FilterHorizontalChildViewHolder> {
     private LayoutInflater mInflater;
-    private ArrayList<GPUFilterRes> mChildList = new ArrayList<>();
+    private ArrayList<GPUFilterRes> mChildList ;
     private OnItemChildListener mOnItemChildListener;
     private int mSelectBorderColor = Color.rgb(0, 235, 232);
     private int current = -1;
     private Context mContext;
+    private int currentParentPosition = -1;
+    private int prvParentPosition = 0;
+    private Bitmap mBitmapFilter;
 
     public HorizontalExpandableAdapter setOnItemChildListener(OnItemChildListener listener) {
         mOnItemChildListener = listener;
         return this;
     }
 
-    public HorizontalExpandableAdapter(Context context, @NonNull List<FilterHorizontalParent> parentList, ArrayList<GPUFilterRes> list) {
+    public HorizontalExpandableAdapter(Context context, @NonNull List<FilterHorizontalParent> parentList, ArrayList<GPUFilterRes> list, Bitmap bitmap) {
         super(parentList);
         mContext = context;
         mChildList = list;
         mInflater = LayoutInflater.from(context);
+        mBitmapFilter = bitmap;
     }
 
     @NonNull
@@ -62,8 +69,9 @@ public class HorizontalExpandableAdapter extends ExpandableRecyclerAdapter<Filte
     }
 
     @Override
-    public void onBindChildViewHolder(@NonNull final FilterHorizontalChildViewHolder childViewHolder, int parentPosition, final int childPosition, @NonNull FilterHorizontalChild child) {
-        childViewHolder.bind(child.getGpuFilterRes());
+    public void onBindChildViewHolder(@NonNull final FilterHorizontalChildViewHolder childViewHolder, final int parentPosition, final int childPosition, @NonNull FilterHorizontalChild child) {
+        Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ic_border_layout);
+        childViewHolder.bind(child.getGpuFilterRes(),mContext,mBitmapFilter);
         childViewHolder.imgFilterChild.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,17 +81,29 @@ public class HorizontalExpandableAdapter extends ExpandableRecyclerAdapter<Filte
                     } catch (ArrayIndexOutOfBoundsException e) {
                         e.printStackTrace();
                     }
-
                 }
+
+                prvParentPosition = currentParentPosition;
+
+                currentParentPosition = parentPosition;
+                current = childPosition;
+                notifyParentChanged(currentParentPosition);
+                if(prvParentPosition < 0) return;
+                notifyParentChanged(prvParentPosition);
             }
         });
 
-
+        if (childPosition == current && currentParentPosition == parentPosition) {
+            childViewHolder.imgFilterChild.setBorderColor(mSelectBorderColor);
+            childViewHolder.imgFilterChild.setShowBorder(true);
+            childViewHolder.imgFilterChild.setBorderWidth(1.0f);
+            childViewHolder.imgFilterChild.setShowImageBorder(true, bitmap);
+        } else {
+            childViewHolder.imgFilterChild.setShowBorder(false);
+        }
     }
 
     public interface OnItemChildListener {
         void onItemChildClick(int parent, int child);
     }
-
-
 }

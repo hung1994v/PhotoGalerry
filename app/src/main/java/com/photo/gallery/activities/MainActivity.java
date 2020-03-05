@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.bsoft.core.AdmobFull;
 import com.bsoft.core.AdmobFullHelper;
 import com.bsoft.core.BRateApp;
+import com.bsoft.core.PreloadNativeAdsList;
 import com.photo.gallery.R;
 import com.photo.gallery.fragments.FilesAlbumFragment;
 import com.photo.gallery.fragments.PhotoViewerFragment;
@@ -39,7 +40,7 @@ import java.util.Comparator;
 import static com.photo.gallery.utils.ConstValue.SPLASH_INTENT;
 import static com.photo.gallery.utils.ConstValue.VIDEO_EDIT_URI_KEY;
 
-public class MainActivity extends AppCompatActivity implements PremissionFragment.onPermissionListener {
+public class MainActivity extends AppCompatActivity {
 
     private BRateApp bRateApp;
     boolean isGrandPermission;
@@ -50,21 +51,13 @@ public class MainActivity extends AppCompatActivity implements PremissionFragmen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(getIntent()!=null) {
-            isGrandPermission = getIntent().getBooleanExtra(SPLASH_INTENT,false);
-        }else {
-            isGrandPermission = false;
-        }
-        if(isGrandPermission){
-            getSupportFragmentManager().beginTransaction().replace(R.id.root_view, new HomeFragment()).commit();
-            bRateApp = new BRateApp.Builder(this, getString(R.string.native_admob_id), this::finish)
-                    .isPremium(false).displayDoNotShowAgain(false).build();
-            AdmobFull.init(this, getString(R.string.full_admob_id));
-        }else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.root_view, PremissionFragment.newInstance(this)).commit();
-        }
-    }
+        setLightStatusBar();
 
+        getSupportFragmentManager().beginTransaction().replace(R.id.root_view, new HomeFragment()).commit();
+        bRateApp = new BRateApp.Builder(this, getString(R.string.native_admob_id), this::finish)
+                .isPremium(false).displayDoNotShowAgain(false).build();
+        AdmobFull.init(this, getString(R.string.full_admob_id));
+    }
 
 
     protected void setLightStatusBar() {
@@ -79,9 +72,9 @@ public class MainActivity extends AppCompatActivity implements PremissionFragmen
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.root_view);
-        if(fragment instanceof PremissionFragment){
+        if (fragment instanceof PremissionFragment) {
             finish();
-        }else if (fragment instanceof HomeFragment) {
+        } else if (fragment instanceof HomeFragment) {
             if (!((HomeFragment) fragment).isSearchViewClose()) {
                 ((HomeFragment) fragment).SearchViewClose();
             } else if (((HomeFragment) fragment).getToolbarShow()) {
@@ -118,87 +111,7 @@ public class MainActivity extends AppCompatActivity implements PremissionFragmen
     protected void onDestroy() {
         super.onDestroy();
         AdmobFull.destroy();
+        PreloadNativeAdsList.getInstance().destroy();
     }
 
-
-
-    private void loadFromGallery() {
-
-//        showDialog();
-                try {
-                    ArrayList<FileItem> listAllFiles = new ArrayList<>();
-                    ArrayList<FileItem> listAllImgs = GalleryUtil.getAllImages(MainActivity.this);
-                    ArrayList<FileItem> listAllVideos = GalleryUtil.getAllVideos(MainActivity.this);
-
-
-                    ArrayList<FileItem> listAllMediaSdcard = new ArrayList<>();
-                    GalleryUtil.getAllMediaSdcard(MainActivity.this, listAllMediaSdcard);
-                    ArrayList<FileItem> listAllImgsSdcard = new ArrayList<>();
-                    ArrayList<FileItem> listAllVideosSdcard = new ArrayList<>();
-                    for (int i = 0; i < listAllMediaSdcard.size(); i++) {
-                        FileItem item = listAllMediaSdcard.get(i);
-                        if (item.isImage) {
-                            listAllImgsSdcard.add(item);
-                        } else {
-                            listAllVideosSdcard.add(item);
-                        }
-                    }
-                    listAllImgs.addAll(listAllImgsSdcard);
-                    listAllVideos.addAll(listAllVideosSdcard);
-
-
-                    listAllFiles.addAll(listAllImgs);
-                    listAllFiles.addAll(listAllVideos);
-
-                    /**
-                     * Sort all files descending based-on date-modified.
-                     * */
-                    Collections.sort(listAllFiles, new Comparator<FileItem>() {
-                        @Override
-                        public int compare(FileItem f1, FileItem f2) {
-
-                            if (f1 == null || f2 == null || f1.date_modified == null || f2.date_modified == null) {
-//                                Flog.d(TAG, "123compare = "+f1 + "_f2= "+f2);
-                                return 0;
-                            }
-
-//                            Flog.d(TAG, "cmmp: f1="+f1.date_modified+"_f2="+f2.date_modified);
-                            long v1 = Utils.parseLong(f1.date_modified);
-                            long v2 = Utils.parseLong(f2.date_modified);
-                            if (v1 == -1 || v2 == -1) {
-                                return 0;
-                            }
-
-                            int cmp = 0;
-                            if (v1 > v2) {
-                                cmp = -1;
-                            } else if (v1 < v2) {
-                                cmp = 1;
-                            }
-                            return cmp;
-                        }
-                    });
-
-//                    hideDialog();
-
-//                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                    intent.putParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES, listAllFiles);
-//                    intent.putExtra(SPLASH_INTENT, true);
-//
-//                    startActivity(intent);
-                    getSupportFragmentManager().beginTransaction().replace(R.id.root_view,HomeFragment.newInstance(listAllFiles,true)).commitAllowingStateLoss();
-
-
-                    //Let's Finish Splash Activity since we don't want to open this when user press back button.
-                } catch (Exception ignored) {
-//                    hideDialog();
-                    ignored.printStackTrace();
-                }
-    }
-    public void onPermissionGranted() {
-        bRateApp = new BRateApp.Builder(this, getString(R.string.native_admob_id), this::finish)
-                .isPremium(false).displayDoNotShowAgain(false).build();
-        AdmobFull.init(this, getString(R.string.full_admob_id));
-        loadFromGallery();
-    }
 }

@@ -2741,7 +2741,7 @@ public class GPUFilterFactory {
                 filters.add(new GPUImageSaturationFilter(0.0f));
                 filters.add(GPUImageFilterCreator.createFilterForTwoInputFilter(context, "filter/BW/dogpatch/curves1.png", GPUImageToneCurveMapFilter.class));
                 return new GPUImageFilterGroup(filters);
-            case 126 /*126*/:
+            case 126/*126*/:
                 filters.add(new GPUImageSaturationFilter(0.0f));
                 filters.add(GPUImageFilterCreator.createFilterForTwoInputFilter(context, "filter/BW/gingham/curves1.png", GPUImageToneCurveMapFilter.class));
                 return new GPUImageFilterGroup(filters);

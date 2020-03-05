@@ -1,8 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="center_vertical"
+    android:background="@color/colorBgAppLight"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/margin_normal_size">
+    android:paddingLeft="@dimen/normal">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,6 +13,7 @@
         android:orientation="horizontal">
 
         <TextView
+            android:textColor="@color/white"
             style="@style/GeneralTextView"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -25,12 +28,14 @@
     </LinearLayout>
 
     <LinearLayout
+        android:layout_marginTop="@dimen/normal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
+            android:textColor="@color/white"
             style="@style/GeneralTextView"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -44,13 +49,17 @@
             android:layout_weight="4" />
     </LinearLayout>
 
+
     <LinearLayout
+        android:visibility="gone"
+        android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
+            android:textColor="@color/white"
             style="@style/GeneralTextView"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -62,9 +71,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="4"
             android:orientation="horizontal"
-            android:padding="@dimen/margin_normal_size">
+            android:padding="@dimen/normal">
 
             <ImageView
+                android:tint="@color/white"
                 android:id="@+id/ic_left_alignment"
                 style="@style/GeneralButtonStyle"
                 android:scaleType="fitCenter"
@@ -73,6 +83,7 @@
                 android:src="@drawable/ic_left_alignment" />
 
             <ImageView
+                android:tint="@color/white"
                 android:id="@+id/ic_center_alignment"
                 style="@style/GeneralButtonStyle"
                 android:scaleType="fitCenter"
@@ -81,6 +92,7 @@
                 android:src="@drawable/ic_central_align" />
 
             <ImageView
+                android:tint="@color/white"
                 android:id="@+id/ic_right_alignment"
                 style="@style/GeneralButtonStyle"
                 android:scaleType="fitCenter"

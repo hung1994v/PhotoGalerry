@@ -527,7 +527,7 @@ public class FileUtil {
             conValues.put(MediaStore.Images.Media.DATE_MODIFIED, String.valueOf(System.currentTimeMillis() / 1000));
             conValues.put(MediaStore.Images.Media.HEIGHT, fileItem.height);
             conValues.put(MediaStore.Images.Media.WIDTH, fileItem.width);
-            conValues.put(MediaStore.Images.Media.SIZE, fileItem.size);
+            conValues.put(MediaStore.Images.Media.SIZE, fileItem.mSize);
             conValues.put(MediaStore.Images.Media.MIME_TYPE, fileItem.mime_type);
             conValues.put(MediaStore.Images.Media.ORIENTATION, fileItem.orientation);
         } else {
@@ -540,7 +540,7 @@ public class FileUtil {
             conValues.put(MediaStore.Video.Media.DATE_MODIFIED, String.valueOf(System.currentTimeMillis() / 1000));
             conValues.put(MediaStore.Video.Media.HEIGHT, fileItem.height);
             conValues.put(MediaStore.Video.Media.WIDTH, fileItem.width);
-            conValues.put(MediaStore.Video.Media.SIZE, fileItem.size);
+            conValues.put(MediaStore.Video.Media.SIZE, fileItem.mSize);
             conValues.put(MediaStore.Video.Media.MIME_TYPE, fileItem.mime_type);
             conValues.put(MediaStore.Video.Media.DURATION, fileItem.duration);
         }

@@ -5,4 +5,5 @@
     <string name="text_alignment">Align</string>
     <string name="opacity">Opacity</string>
     <string name="enter_text">Enter text</string>
+    <string name="padding">Padding</string>
 </resources>

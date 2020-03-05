@@ -1,0 +1,68 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/tab_font_text_height"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="@color/colorBgAppLight"
+    android:id="@+id/parentTextCollageView">
+
+    <LinearLayout
+        android:id="@+id/layoutTabText"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/icon_size_xstand"
+        android:background="@color/colorBgAppLight"
+        android:orientation="horizontal">
+        <RelativeLayout
+            android:id="@+id/keyboard_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            >
+            <ImageView
+                android:id="@+id/keyboard"
+                android:layout_width="@dimen/icon_size_xstand"
+                android:layout_height="@dimen/icon_size_xstand"
+                android:padding="@dimen/small"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_keyboard_txt"
+                />
+
+        </RelativeLayout>
+        <io.karim.MaterialTabs
+            android:id="@+id/tabTextCollage"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            app:mtIndicatorColor="@color/colorPrimary"
+            app:mtIndicatorHeight="@dimen/xxx_small"
+            app:tabIndicator="@drawable/bg_tab_indicator"
+            app:mtPaddingMiddle="false"
+            app:mtSameWeightTabs="true"
+            app:mtTextColorSelected="@color/white" />
+
+        <RelativeLayout
+            android:id="@+id/layoutHideTextCollage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            >
+            <ImageView
+                android:id="@+id/imgHideText"
+                android:layout_width="@dimen/icon_size_xstand"
+                android:layout_height="@dimen/icon_size_xstand"
+                android:padding="@dimen/small"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_hide_1"
+                />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+
+    <bsoft.healthy.tracker.menstrual.lib_sticker.adapters.CustomViewPager
+        android:id="@+id/viewPagerTextCollage"
+        android:layout_below="@+id/layoutTabText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </bsoft.healthy.tracker.menstrual.lib_sticker.adapters.CustomViewPager>
+</RelativeLayout>

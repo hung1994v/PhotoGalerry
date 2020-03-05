@@ -6,17 +6,18 @@
     android:orientation="vertical">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerview_top"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingRight="@dimen/margin_normal_size"
-        android:scrollbars="none" />
-
-    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_normal_size"
-        android:paddingRight="@dimen/margin_normal_size"
+        android:layout_marginTop="@dimen/normal"
+        android:paddingRight="@dimen/normal"
         android:scrollbars="none" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingRight="@dimen/normal"
+        android:scrollbars="none" />
+
+
 </LinearLayout>

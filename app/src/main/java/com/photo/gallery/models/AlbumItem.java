@@ -8,7 +8,8 @@ public class AlbumItem {
 
     public String pathFirstImg = null;
     public String name = null;
-    public String size = null;
+    public long mSize = 0;
     public boolean isSelected = false;
     public String alBumId = null;
+    public String numFile = null;
 }

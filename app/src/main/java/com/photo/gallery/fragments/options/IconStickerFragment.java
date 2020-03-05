@@ -49,21 +49,12 @@ public class IconStickerFragment extends BaseOptFragment implements StickerAdapt
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        applyColor(view);
         initViews();
         setupRecyclerview();
 
         if (listener!=null) {
             listener.onStickerIconFragmentReady();
         }
-    }
-
-    private void applyColor(View view) {
-        int defaultPrimary = ContextCompat.getColor(mContext, R.color.colorPrimary);
-        int colorPrimary = SharedPrefUtil.getInstance().getInt(ConstValue.EXTRA_CURRENT_COLOR_PICKER, defaultPrimary);
-        ViewGroup rv1 = (ViewGroup)view.findViewById(R.id.recycler_view_details);
-        ViewGroup rv2 = (ViewGroup)view.findViewById(R.id.recycler_view);
-        Utils.setColorViews(colorPrimary, rv1, rv2);
     }
 
     public static final int MAX_STICER = 12;
@@ -83,7 +74,7 @@ public class IconStickerFragment extends BaseOptFragment implements StickerAdapt
         }
 
         ArrayList<String> lisStickerIcon = new ArrayList<>();
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 5; i++) {
             List<String> mListIconSticker = listMap.get(KEY_STICKER + i);
             lisStickerIcon.add(mListIconSticker.get(0));
         }
@@ -98,38 +89,32 @@ public class IconStickerFragment extends BaseOptFragment implements StickerAdapt
         switch (numSticker) {
             case 1:
                 list.clear();
-                for (int i = 1; i <= 39; i++) {
+                for (int i = 1; i <= 14; i++) {
                     list.add("sticker/1/" + i + ".png");
                 }
                 break;
             case 2:
                 list.clear();
-                for (int i = 1; i <= 40; i++) {
+                for (int i = 1; i <= 49; i++) {
                     list.add("sticker/2/" + i + ".png");
                 }
                 break;
             case 3:
                 list.clear();
-                for (int i = 1; i <= 49; i++) {
+                for (int i = 1; i <= 20; i++) {
                     list.add("sticker/3/" + i + ".png");
                 }
                 break;
             case 4:
                 list.clear();
-                for (int i = 1; i <= 35; i++) {
+                for (int i = 1; i <= 21; i++) {
                     list.add("sticker/4/" + i + ".png");
                 }
                 break;
             case 5:
                 list.clear();
-                for (int i = 1; i <= 56; i++) {
+                for (int i = 1; i <= 15; i++) {
                     list.add("sticker/5/" + i + ".png");
-                }
-                break;
-            case 6:
-                list.clear();
-                for (int i = 1; i <= 36; i++) {
-                    list.add("sticker/6/" + i + ".png");
                 }
                 break;
         }

@@ -3,16 +3,14 @@ package com.photo.gallery.fragments;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
+
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -21,23 +19,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bsoft.core.AdmobFullHelper;
 import com.bumptech.glide.Glide;
-import com.google.android.gms.ads.AdSize;
-import com.halilibo.bettervideoplayer.BetterVideoCallback;
-import com.halilibo.bettervideoplayer.BetterVideoPlayer;
 import com.photo.gallery.R;
-import com.photo.gallery.activities.PlayActivity;
 import com.photo.gallery.databinding.FragmentVideoViewerBinding;
 import com.photo.gallery.exoplayer.ExoPlayerActivity;
 import com.photo.gallery.models.FileItem;
-import com.photo.gallery.utils.DateUtils;
 import com.photo.gallery.utils.DbUtils;
-import com.photo.gallery.utils.FileUtil;
-import com.photo.gallery.utils.Flog;
-import com.photo.gallery.utils.Utils;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import static com.photo.gallery.utils.ConstValue.VIDEO_EDIT_URI_KEY;
@@ -136,7 +124,7 @@ public class VideoViewerFragment extends BaseFragment implements View.OnClickLis
 
 
         binding.btnBack.setOnClickListener(this);
-        binding.btnMore.setOnClickListener(this);
+//        binding.btnMore.setOnClickListener(this);
         binding.btnShare.setOnClickListener(this);
         binding.btnDelete.setOnClickListener(this);
         binding.btnFavourite.setOnClickListener(this);
@@ -202,10 +190,7 @@ public class VideoViewerFragment extends BaseFragment implements View.OnClickLis
         int id = view.getId();
         switch (id) {
             case R.id.playVideo:
-                startActivity(new Intent(mContext, ExoPlayerActivity.class)
-                        .putExtra(VIDEO_EDIT_URI_KEY, mFileItem.path)
-                        .putExtra(VIDEO_NAME_KEY, mFileItem.name)
-                        .putExtra(VIDEO_OPEN_WITH,false));
+
                 break;
             case R.id.btn_back:
                 if (listener != null) {
@@ -226,7 +211,7 @@ public class VideoViewerFragment extends BaseFragment implements View.OnClickLis
                     listener.onShareVideoViewerFragment(mFileItem);
                 }
                 break;
-            case R.id.btn_more:
+            case R.id.btn_details:
 
                 if (listener!=null) {
                     listener.onMoreVideoViewerFragment(mFileItem);

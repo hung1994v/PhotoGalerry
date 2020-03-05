@@ -26,12 +26,18 @@ import com.photo.gallery.utils.ConstValue;
 import com.photo.gallery.utils.DbUtils;
 import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
+import com.photo.gallery.utils.GalleryUtil;
+import com.photo.gallery.utils.SharedPrefUtil;
 import com.photo.gallery.utils.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_MAP;
+import static com.photo.gallery.utils.ConstValue.NUM_OF_COLS_DAY_GRIDVIEW;
 
 /**
  * Created by Hoavt on 3/15/2018.
@@ -43,25 +49,36 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
     private ArrayList<FileItem> mListAllVideos = null;
     private OnVideoListener listener = null;
     private RecyclerView mRecyclerView = null;
-    private Map<String, ArrayList<FileItem>> mListAllVideoSections = null;
+    private Map<String, ArrayList<FileItem>> mListAllVideoSections = new HashMap<>();
     private SectionedRecyclerViewAdapter sectionAdapter = null;
     private HashMap<Integer, FileItem> listPositionChanged = new HashMap<>();
     private boolean isLongClickedEvent = false;
 
+    public static VideoFragment newInstance(Bundle bundle) {
+        VideoFragment fragment = new VideoFragment();
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.layout_gridview, container, false);
+        return inflater.inflate(R.layout.layout_gridview_video, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        getData();
         initDialog();
         initViews();
-        if (listener != null) {
-            listener.onVideoFragmentReady();
+        setValues();
+    }
+
+    private void getData() {
+        if(getArguments()!=null){
+            this.mListAllVideos = getArguments().getParcelable(EXTRA_LIST_ALL_FILES);
+            this.mListAllVideoSections = (Map<String, ArrayList<FileItem>>) getArguments().getSerializable(EXTRA_LIST_ALL_MAP);
         }
     }
 
@@ -81,26 +98,11 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
         mRecyclerView = (RecyclerView) viewParent.findViewById(R.id.recycler_view);
     }
 
-    public void initialize(ArrayList<FileItem> listAllVideos, Map<String, ArrayList<FileItem>> listAllVideoSections) {
-        mListAllVideos = listAllVideos;
-        mListAllVideoSections = listAllVideoSections;
-        if (mListAllVideos == null || mListAllVideoSections == null) {
-            return;
-        }
-
-        Flog.d(TAG, "list video size=" + mListAllVideos.size());
-
-        setValues();
-    }
-
     public void setValues() {
 
         // Create an instance of SectionedRecyclerViewAdapter
         sectionAdapter = new SectionedRecyclerViewAdapter();
 
-//        GalleryUtil.logListFolder(mListAllVideoSections);
-
-        // Add your Sections
         int index = 0;
         for (Map.Entry<String, ArrayList<FileItem>> entry : mListAllVideoSections.entrySet()) {
             String key = entry.getKey();
@@ -112,22 +114,29 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
             index++;
         }
 
+
         // Set up your RecyclerView with the SectionedRecyclerViewAdapter
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
+
+        mRecyclerView.setLayoutManager(getLayoutManager());
+        mRecyclerView.setAdapter(sectionAdapter);
+    }
+
+    private GridLayoutManager getLayoutManager() {
+        GridLayoutManager glm = new GridLayoutManager(mContext, SharedPrefUtil.getInstance().getInt(ConstValue.COLUM_GIRD_NUMBER,NUM_OF_COLS_DAY_GRIDVIEW));
         glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
                 switch (sectionAdapter.getSectionItemViewType(position)) {
                     case SectionedRecyclerViewAdapter.VIEW_TYPE_HEADER:
-                        return ConstValue.NUM_OF_COLS_GRIDVIEW;
+                        return SharedPrefUtil.getInstance().getInt(ConstValue.COLUM_GIRD_NUMBER,NUM_OF_COLS_DAY_GRIDVIEW);
                     default:
                         return 1;
                 }
             }
         });
-        mRecyclerView.setLayoutManager(glm);
-        mRecyclerView.setAdapter(sectionAdapter);
+        return glm;
     }
+
 
     public VideoFragment setListener(OnVideoListener listener) {
         this.listener = listener;
@@ -259,7 +268,7 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
         }
 
         Flog.d(TAG, "32list video size=" + mListAllVideos.size());
-
+        mRecyclerView.setLayoutManager(getLayoutManager());
         sectionAdapter.removeAllSections();
         // Add your Sections
         int index = 0;
@@ -304,8 +313,56 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
         FileUtil.share(mContext, uries);
     }
 
+    public void search(String newText, boolean isDaySection) {
+        ArrayList<FileItem> listFileFiltered = GalleryUtil.filterByNameFile(mListAllVideos, newText);
+        if(isDaySection){
+            updateMap(GalleryUtil.groupListSectionByDate(listFileFiltered));
+        }else {
+            updateMap(GalleryUtil.groupListSectionByMonth(listFileFiltered));
+        }
+
+        sectionAdapter.removeAllSections();
+        Flog.d(TAG, "12list photo size=" + mListAllVideos.size() + "_" + mListAllVideoSections.size());
+        int index = 0;
+        // Add your Sections
+        for (Map.Entry<String, ArrayList<FileItem>> entry : mListAllVideoSections.entrySet()) {
+            String key = entry.getKey();
+            ArrayList<FileItem> items = mListAllVideoSections.get(key);
+
+            MySection section = new MySection(index, mContext, key, items,false).setListener(this);
+            sectionAdapter.addSection(section);
+
+            index++;
+        }
+        sectionAdapter.notifyDataSetChanged();
+    }
+
+    public void updateMap(Map<String, ArrayList<FileItem>> mListAllVideoSections) {
+        this.mListAllVideoSections = mListAllVideoSections;
+        if (mListAllVideoSections == null) {
+            return;
+        }
+
+        Flog.d(TAG, "update search photo size=" + mListAllVideoSections.size());
+
+        sectionAdapter.removeAllSections();
+
+        int cnt = 0;
+        for (Map.Entry<String, ArrayList<FileItem>> entry : mListAllVideoSections.entrySet()) {
+            String key = entry.getKey();
+            ArrayList<FileItem> items = mListAllVideoSections.get(key);
+
+            MySection section = new MySection(cnt, mContext, key, items,false).setListener(this);
+            sectionAdapter.addSection(section);
+            cnt++;
+        }
+        Flog.d(TAG, "update total sections=" + sectionAdapter.getItemCount() + "_vs_" + cnt);
+
+        sectionAdapter.notifyDataSetChanged();
+    }
+
+
     public interface OnVideoListener {
-        void onVideoFragmentReady();
 
         void onItemInVideoLongClicked(FileItem file);
 

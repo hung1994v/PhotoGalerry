@@ -14,6 +14,7 @@
         android:layout_marginBottom="@dimen/margin_large_size"/>
 
     <EditText
+        android:maxLength="50"
         android:id="@+id/editTextDialogUserInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >

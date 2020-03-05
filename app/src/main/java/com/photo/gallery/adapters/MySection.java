@@ -3,6 +3,8 @@ package com.photo.gallery.adapters;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestOptions;
 import com.photo.gallery.R;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.section_headergrid.SectionParameters;
@@ -21,6 +24,8 @@ import com.photo.gallery.utils.SharedPrefUtil;
 import com.photo.gallery.utils.Utils;
 
 import java.util.ArrayList;
+
+import static com.photo.gallery.utils.ConstValue.NUM_OF_COLS_DAY_GRIDVIEW;
 
 public class MySection extends StatelessSection {
     private static final java.lang.String TAG = MySection.class.getSimpleName();
@@ -57,8 +62,7 @@ public class MySection extends StatelessSection {
         mItems = items;
         this.STATE_EDIT = state;
         int width = context.getResources().getDisplayMetrics().widthPixels;
-
-        mItemSize = width / ConstValue.NUM_OF_COLS_GRIDVIEW
+        mItemSize = width / SharedPrefUtil.getInstance().getInt(ConstValue.COLUM_GIRD_NUMBER,NUM_OF_COLS_DAY_GRIDVIEW)
                 - (int) context.getResources().getDimension(R.dimen.margin_xxsmall_size);
     }
 
@@ -100,16 +104,18 @@ public class MySection extends StatelessSection {
 //                    .override(mItemSize, mItemSize)
 //                    .into(itemHolder.ivImage);
 //        } else {
+
             Glide.with(mContext)
                     .load(filePath)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .error(R.drawable.ic_no_image)
+//                    .error(R.drawable.ic_no_image)
 //                .diskCacheStrategy(DiskCacheStrategy.NONE)
-//                .skipMemoryCache(true)
+//                .skipMemoryCache(false)
 //                .skipMemoryCache(false)  // old
-                    .override(mItemSize, mItemSize)
+                    .apply(new RequestOptions().placeholder(R.drawable.splash).override(mItemSize,mItemSize))
                     .centerCrop()
                     .into(itemHolder.ivImage);
+
+
 //        }
 
         if (unAllSelected) {
@@ -194,25 +200,25 @@ public class MySection extends StatelessSection {
             viewInfoVideo = (ViewGroup) itemView.findViewById(R.id.view_info_video);
             textTimeVideo = (TextView) itemView.findViewById(R.id.tv_time_video);
 
-            if (mItemSize <= 0) {
-                return;
-            }
+//            if (mItemSize <= 0) {
+//                return;
+//            }
 
 //            image_container = (ViewGroup) itemView.findViewById(R.id.image_container);
-            ViewGroup.LayoutParams params = viewTick.getLayoutParams();
-            params.width = mItemSize;
-            params.height = mItemSize;
-            viewTick.requestLayout();
-
-            ViewGroup.LayoutParams params1 = ivImage.getLayoutParams();
-            params1.width = mItemSize;
-            params1.height = mItemSize;
-            ivImage.requestLayout();
-
-            ViewGroup.LayoutParams params2 = viewInfoVideo.getLayoutParams();
-            params2.width = mItemSize;
-            params2.height = mItemSize;
-            viewInfoVideo.requestLayout();
+//            ViewGroup.LayoutParams params = viewTick.getLayoutParams();
+//            params.width = mItemSize;
+//            params.height = mItemSize;
+//            viewTick.requestLayout();
+//
+//            ViewGroup.LayoutParams params1 = ivImage.getLayoutParams();
+//            params1.width = mItemSize;
+//            params1.height = mItemSize;
+//            ivImage.requestLayout();
+//
+//            ViewGroup.LayoutParams params2 = viewInfoVideo.getLayoutParams();
+//            params2.width = mItemSize;
+//            params2.height = mItemSize;
+//            viewInfoVideo.requestLayout();
         }
     }
 

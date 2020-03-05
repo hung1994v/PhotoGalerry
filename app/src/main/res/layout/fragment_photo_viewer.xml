@@ -1,146 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout>
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:clickable="true"
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/s_black"
-        android:orientation="vertical">
-
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:padding="@dimen/_10sdp"
-            android:id="@+id/my_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:id="@+id/btn_back"
-                android:tint="@color/white"
-                android:padding="@dimen/_3sdp"
-                android:layout_width="@dimen/_24sdp"
-                android:layout_height="@dimen/_24sdp"
-                android:layout_marginLeft="@dimen/margin_small_size"
-                android:src="@drawable/ic_back"
-                app:layout_constraintBottom_toBottomOf="@+id/my_toolbar"
-                app:layout_constraintLeft_toLeftOf="@+id/my_toolbar"
-                app:layout_constraintTop_toTopOf="@+id/my_toolbar" />
-
-            <ImageView
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:tint="@color/white"
-                android:padding="@dimen/_3sdp"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"
-                android:id="@+id/btn_more"
-                android:layout_marginRight="@dimen/margin_small_size"
-                android:src="@drawable/ic_more"
-                app:layout_constraintBottom_toBottomOf="@+id/my_toolbar"
-                app:layout_constraintRight_toRightOf="@+id/my_toolbar"
-                app:layout_constraintTop_toTopOf="@+id/my_toolbar" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <com.github.chrisbanes.photoview.PhotoView
-            android:id="@+id/iv_photo"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="1"
-            android:src="@drawable/bg_splash" />
+        android:clickable="true">
 
         <LinearLayout
-            android:id="@+id/info_parent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/margin_normal_size"
-            android:visibility="gone">
+            android:layout_height="match_parent"
+            android:background="@color/s_black"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_name_photo"
-                style="@style/GeneralTextView"
-                android:text="201831_2938444"
-                android:textSize="@dimen/font_size_standard" />
 
-            <TextView
-                android:id="@+id/tv_date_photo"
-                style="@style/GeneralTextView"
-                android:layout_marginTop="@dimen/margin_small_size"
-                android:text="201831_2938444"
-                android:textColor="@color/tabUnselectedIconColor"
-                android:textSize="@dimen/font_size_normal" />
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/my_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_10sdp">
+
+                <ImageView
+                    android:id="@+id/btn_back"
+                    android:layout_width="@dimen/_24sdp"
+                    android:layout_height="@dimen/_24sdp"
+                    android:layout_marginLeft="@dimen/margin_small_size"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_back"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="@+id/my_toolbar"
+                    app:layout_constraintLeft_toLeftOf="@+id/my_toolbar"
+                    app:layout_constraintTop_toTopOf="@+id/my_toolbar" />
+
+                <ImageView
+                    android:id="@+id/btn_set_as"
+                    android:layout_width="@dimen/_22sdp"
+                    android:layout_height="@dimen/_22sdp"
+                    android:layout_marginEnd="@dimen/_20sdp"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_set"
+                    app:layout_constraintBottom_toBottomOf="@id/my_toolbar"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_rename"
+                    app:layout_constraintTop_toTopOf="@id/my_toolbar"/>
+
+                <ImageView
+                    android:id="@+id/btn_rename"
+                    android:layout_width="@dimen/_22sdp"
+                    android:layout_height="@dimen/_22sdp"
+                    android:layout_marginEnd="@dimen/_20sdp"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_rename"
+                    app:layout_constraintBottom_toBottomOf="@id/my_toolbar"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_details"
+                    app:layout_constraintTop_toTopOf="@id/my_toolbar"/>
+
+                <ImageView
+                    android:id="@+id/btn_details"
+                    android:layout_width="@dimen/_24sdp"
+                    android:layout_height="@dimen/_24sdp"
+                    android:layout_marginRight="@dimen/_10sdp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_details"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="@+id/my_toolbar"
+                    app:layout_constraintRight_toRightOf="@+id/my_toolbar"
+                    app:layout_constraintTop_toTopOf="@+id/my_toolbar" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.github.chrisbanes.photoview.PhotoView
+                android:id="@+id/iv_photo"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                />
+
+            <LinearLayout
+                android:id="@+id/info_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/margin_normal_size"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_name_photo"
+                    style="@style/GeneralTextView"
+                    android:text="201831_2938444"
+                    android:textSize="@dimen/font_size_standard" />
+
+                <TextView
+                    android:id="@+id/tv_date_photo"
+                    style="@style/GeneralTextView"
+                    android:layout_marginTop="@dimen/margin_small_size"
+                    android:text="201831_2938444"
+                    android:textColor="@color/tabUnselectedIconColor"
+                    android:textSize="@dimen/font_size_normal" />
+            </LinearLayout>
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/bottom_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="@dimen/_10sdp">
+
+                <ImageView
+                    android:id="@+id/btn_share"
+                    android:layout_width="@dimen/_26sdp"
+                    android:layout_height="@dimen/_26sdp"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_share"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_edit"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/btn_edit"
+                    android:layout_width="@dimen/_26sdp"
+                    android:layout_height="@dimen/_26sdp"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_edit"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_favourite"
+                    app:layout_constraintStart_toEndOf="@+id/btn_share"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/btn_favourite"
+                    android:layout_width="@dimen/_26sdp"
+                    android:layout_height="@dimen/_26sdp"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_farvorite_none"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_delete"
+                    app:layout_constraintStart_toEndOf="@+id/btn_edit"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/btn_delete"
+                    android:layout_width="@dimen/_26sdp"
+                    android:layout_height="@dimen/_26sdp"
+                    android:layout_weight="1"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="@dimen/_3sdp"
+                    android:src="@drawable/ic_delete"
+                    android:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/btn_favourite"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            <FrameLayout
+                android:id="@+id/admob_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
         </LinearLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/bottom_content"
-            android:padding="@dimen/_10sdp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:tint="@color/white"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="@dimen/_3sdp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:id="@+id/btn_share"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/btn_edit"
-                android:src="@drawable/ic_share"
-                android:layout_weight="1"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"/>
-
-            <ImageView
-                android:tint="@color/white"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="@dimen/_3sdp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/btn_share"
-                app:layout_constraintEnd_toStartOf="@+id/btn_favourite"
-                android:id="@+id/btn_edit"
-                android:src="@drawable/ic_edit"
-                android:layout_weight="1"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"/>
-
-            <ImageView
-                android:tint="@color/white"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="@dimen/_3sdp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/btn_edit"
-                app:layout_constraintEnd_toStartOf="@+id/btn_delete"
-                android:id="@+id/btn_favourite"
-                android:src="@drawable/ic_farvorite_none"
-                android:layout_weight="1"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"/>
-
-            <ImageView
-                android:tint="@color/white"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="@dimen/_3sdp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/btn_favourite"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:id="@+id/btn_delete"
-                android:src="@drawable/ic_delete"
-                android:layout_weight="1"
-                android:layout_width="@dimen/_26sdp"
-                android:layout_height="@dimen/_26sdp"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
         <FrameLayout
-            android:id="@+id/admob_banner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
-    </LinearLayout>
+            android:layout_height="match_parent">
+            <ProgressBar
+                android:layout_gravity="center"
+                android:id="@+id/progress_circular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </FrameLayout>
+    </RelativeLayout>
+
 </layout>

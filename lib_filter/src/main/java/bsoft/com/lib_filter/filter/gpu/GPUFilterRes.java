@@ -8,7 +8,7 @@ import bsoft.com.lib_filter.filter.listener.OnPostFilteredListener;
 import bsoft.com.lib_filter.filter.listener.WBAsyncPostIconListener;
 
 
-public class  GPUFilterRes extends WBImageRes {
+public class GPUFilterRes extends WBImageRes {
     private GPUFilterType filterType;
     private Bitmap filtered;
     private Bitmap src;

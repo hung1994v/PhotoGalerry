@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/icon_size_standard"
+    android:background="?attr/selectableItemBackground"
+    android:paddingStart="@dimen/small"
+    android:paddingEnd="@dimen/small">
+
+    <TextView
+        android:id="@+id/tvListFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="@dimen/font_size_xlarge"
+        android:layout_centerInParent="true" />
+</RelativeLayout>

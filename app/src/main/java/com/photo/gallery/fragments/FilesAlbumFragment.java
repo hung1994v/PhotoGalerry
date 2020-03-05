@@ -41,7 +41,11 @@ import com.photo.gallery.utils.Flog;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.photo.gallery.utils.ConstValue.ALBUM_NAME;
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
 
 /**
  * Created by Hoavt on 3/19/2018.
@@ -69,12 +73,10 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     private SearchView searchView;
     private boolean isToolbarShow;
 
-    public static FilesAlbumFragment newInstance(ArrayList<FileItem> list, String nameAlbum) {
+    public static FilesAlbumFragment newInstance(Bundle b) {
 
         FilesAlbumFragment fragment = new FilesAlbumFragment();
-        fragment.mListFilesInAlbum = list;
-        fragment.mNameAlbum = nameAlbum;
-        fragment.listSearch.addAll(list);
+        fragment.setArguments(b);
         return fragment;
     }
 
@@ -88,10 +90,23 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        getData();
         initBannerAdmob();
         initViews();
         setValues();
+    }
+
+    private void getData() {
+        if(getArguments() != null){
+            List<FileItem> fileItemList = getArguments().getParcelableArrayList(EXTRA_LIST_ALL_FILES);
+            if(fileItemList!=null){
+                this.mListFilesInAlbum.addAll(fileItemList);
+                    this.listSearch.addAll(fileItemList);
+
+            }
+
+            this.mNameAlbum = getArguments().getString(ALBUM_NAME,"Album");
+        }
     }
 
 
@@ -177,6 +192,7 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     private void intSearchView() {
         searchView = (SearchView) binding.toolbar.getMenu().findItem(R.id.search_bar).getActionView();
         searchView.setQueryHint(getString(R.string.search));
+        searchView.setMaxWidth(Integer.MAX_VALUE);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -198,10 +214,11 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         }
         for (FileItem fileItem : listSearch) {
             if (fileItem.name.toLowerCase().contains(newText.toLowerCase())) {
+
                 mListFilesInAlbum.add(fileItem);
             }
         }
-        mAdapter.notifyDataSetChanged();
+        mAdapter.updateView(mListFilesInAlbum);
     }
 
     private ArrayList<FileItem> getListFromMap(HashMap<Integer, FileItem> mapPosChanged) {
@@ -372,7 +389,17 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         mAdapter = new FileAlbumAdapter(mContext, mListFilesInAlbum).setListener(this);
 
         // Set up your RecyclerView with the SectionedRecyclerViewAdapter
-        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_GRIDVIEW);
+//        GridLayoutManager glm = new GridLayoutManager(mContext, ConstValue.NUM_OF_COLS_DAY_GRIDVIEW);
+        GridLayoutManager  glm= new GridLayoutManager(mContext, 3);
+        glm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (mAdapter.getItemViewType(position) == FileAlbumAdapter.NATIVE_AD_VIEW_TYPE)
+                    return 3; //some other form of item like a header, or whatever you need two spans for
+                else
+                    return 1; //normal item which will take up the normal span you defined in the gridlayoutmanager constructor
+            }
+        });
         mRecyclerview.setLayoutManager(glm);
         mRecyclerview.setAdapter(mAdapter);
 
@@ -967,6 +994,7 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     public void setLongClickedEvent(boolean longClickedEvent) {
         isLongClickedEvent = longClickedEvent;
     }
+
 
     public interface OnFileAlbumsListener {
         void onBackFileAlbumsFragment();

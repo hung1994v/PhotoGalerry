@@ -67,7 +67,7 @@ public class DialogCreateFolderFragment extends DialogFragment implements View.O
 
             AlbumItem item = new AlbumItem();
             item.name = firstItem.folder;
-            item.size = String.valueOf(items.size());
+            item.mSize = firstItem.mSize;
             item.pathFirstImg = firstItem.path;
             albumItems.add(item);
         }

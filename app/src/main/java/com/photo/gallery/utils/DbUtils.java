@@ -39,7 +39,7 @@ public class DbUtils {
             sb.append(",");
             sb.append("\"mime_type\":\"" + item.mime_type + "\"");
             sb.append(",");
-            sb.append("\"size\":\"" + item.size + "\"");
+            sb.append("\"size\":\"" + item.mSize + "\"");
             sb.append(",");
             sb.append("\"path\":\"" + item.path + "\"");
             sb.append(",");
@@ -80,7 +80,7 @@ public class DbUtils {
                     item.height = jsonObject.getString("height");
                     item.width = jsonObject.getString("width");
                     item.mime_type = jsonObject.getString("mime_type");
-                    item.size = jsonObject.getString("size");
+                    item.mSize = jsonObject.getLong("size");
                     item.path = jsonObject.getString("path");
                     item.name = jsonObject.getString("name");
                     item.folder = jsonObject.getString("folder");
@@ -117,7 +117,7 @@ public class DbUtils {
         ArrayList<FileItem> oldList = DbUtils.parseFavourites();
         Flog.d(TAG, "2size="+oldList.size());
         boolean ok = oldList.remove(fileItem);
-        Flog.d(TAG, "2removed "+ok+"_size="+oldList.size());
+        Flog.d(TAG, "2removed "+ok+"_size="+oldList.get(0).name);
         DbUtils.saveFavourites(oldList);
         return ok;
     }

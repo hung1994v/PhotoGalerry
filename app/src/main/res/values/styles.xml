@@ -18,6 +18,22 @@
         <item name="actionModeCloseDrawable">@drawable/ic_back</item>
     </style>
 
+    <style name="MyDialogThemeWhite" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@android:color/white</item>
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorTertiary">@android:color/black</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/PositiveButtonStyle</item>
+    </style>
+
+    <style name="PositiveButtonStyle" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/color_blue</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">@dimen/_11ssp</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
     <style name="TextViewSave">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -62,5 +78,34 @@
         <item name="android:ellipsize">end</item>
         <item name="android:textColor">@color/white</item>
     </style>
+
+    <style name="MyDiscreteSeekBar" parent="Widget.DiscreteSeekBar">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="dsb_indicatorColor">@color/colorAccent</item>
+        <item name="dsb_indicatorTextAppearance">@color/colorAccent</item>
+        <item name="dsb_progressColor">@color/colorAccent</item>
+        <item name="dsb_rippleColor">@color/colorAccent</item>
+    </style>
+
+
+    <style name="StyleIconButtonMenu">
+        <item name="android:layout_width">@dimen/_20sdp</item>
+        <item name="android:layout_height">@dimen/_20sdp</item>
+        <item name="android:layout_marginRight">@dimen/_20sdp</item>
+        <item name="android:layout_marginLeft">@dimen/_20sdp</item>
+    </style>
+
+    <style name="StyleTextButtonMenu">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">@dimen/_12ssp</item>
+        <item name="android:layout_marginTop">@dimen/_15sdp</item>
+    </style>
+
+    <style name="StyleButtonMenu">
+        <item name="android:paddingTop">@dimen/_25sdp</item>
+        <item name="android:paddingBottom">@dimen/_15sdp</item>
+    </style>
+
 
 </resources>

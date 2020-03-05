@@ -1,1 +1,1 @@
-include ':app', ':lib_filter', ':simplecropview', ':lib_sticker', ':bettervideoplayer'
+include ':app', ':lib_filter', ':simplecropview'

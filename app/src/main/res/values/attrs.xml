@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="ShapeOfView">
+        <attr name="shape_clip_drawable" format="reference"/>
+    </declare-styleable>
+    <declare-styleable name="RoundRectView">
+        <attr name="shape_roundRect_topLeftRadius" format="dimension"/>
+        <attr name="shape_roundRect_topRightRadius" format="dimension"/>
+        <attr name="shape_roundRect_bottomLeftRadius" format="dimension"/>
+        <attr name="shape_roundRect_bottomRightRadius" format="dimension"/>
+        <attr name="shape_roundRect_borderWidth" format="dimension"/>
+        <attr name="shape_roundRect_borderColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="AVLoadingIndicatorView">
+        <attr name="minWidth" format="dimension" />
+        <attr name="maxWidth" format="dimension" />
+        <attr name="minHeight" format="dimension" />
+        <attr name="maxHeight" format="dimension" />
+        <attr name="indicatorName" format="string" />
+        <attr name="indicatorColor" format="color" />
+    </declare-styleable>
+
+</resources>

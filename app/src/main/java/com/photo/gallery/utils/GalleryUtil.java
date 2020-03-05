@@ -1,12 +1,14 @@
 package com.photo.gallery.utils;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
+import com.bsoft.core.PreloadNativeAdsList;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.sdcard.StorageBean;
 import com.photo.gallery.utils.sdcard.StorageUtils;
@@ -39,7 +41,7 @@ public class GalleryUtil {
             Flog.d(TAG, "bean "+i+": "+storageBean);
             if (storageBean.getRemovable()) {
                 String path = storageBean.getPath();
-                getAllFilesOfDir(activity, new File(path), listOfAllImages);
+                    getAllFilesOfDir(activity, new File(path), listOfAllImages);
             }
         }
     }
@@ -53,7 +55,6 @@ public class GalleryUtil {
             for (File file : files) {
                 if (file != null) {
                     if (file.isDirectory()) {  // it is a folder...
-
                         getAllFilesOfDir(context, file, data);
                     } else {  // it is a file...
 
@@ -65,7 +66,7 @@ public class GalleryUtil {
                             item.folder = file.getParentFile().getName();
                             item.path = file.getAbsolutePath();
                             item.name = file.getName();
-                            item.size = String.valueOf(file.length());
+                            item.mSize = (file.length());
                             item.date_modified = String.valueOf(file.lastModified());
                             int[] dimens = FileUtil.getDimension(item.path);
                             item.width = String.valueOf(dimens[0]);
@@ -171,14 +172,14 @@ public class GalleryUtil {
 
             model.height = cursor.getString(column_index_height);
             model.width = cursor.getString(column_index_width);
-            model.size = cursor.getString(column_index_size);
+            model.mSize = cursor.getLong(column_index_size);
             model.mime_type = cursor.getString(column_index_mime_type);
             model.orientation = cursor.getString(column_index_orientation);
             model.isImage = isImage;
 
             cnt++;
             Flog.d(TAG, "model at " + cnt + ": " + model);
-            if(new File(model.path).exists()){
+            if(new File(model.path).exists() && model.mSize>0){
                 listOfAllImages.add(model);
             }
 
@@ -255,7 +256,7 @@ public class GalleryUtil {
 
             model.height = cursor.getString(column_index_height);
             model.width = cursor.getString(column_index_width);
-            model.size = cursor.getString(column_index_size);
+            model.mSize = cursor.getLong(column_index_size);
             model.mime_type = cursor.getString(column_index_mime_type);
             model.duration = cursor.getString(column_index_duration);
             model.isImage = isImage;
@@ -285,6 +286,7 @@ public class GalleryUtil {
     }
 
     public static HashMap<String, ArrayList<FileItem>> groupListAllAlbums(ArrayList<FileItem> listAllFiles) {
+//        int positionAds;
         if (listAllFiles == null) {
             return null;
         }
@@ -297,7 +299,6 @@ public class GalleryUtil {
                 listFiles.add(file);
                 listAllFolders.put(folderID, listFiles);
             } else {
-
                 ArrayList<FileItem> listExistsFiles = listAllFolders.get(folderID);
                 listExistsFiles.add(file);
                 listAllFolders.put(folderID, listExistsFiles);
@@ -330,6 +331,8 @@ public class GalleryUtil {
         }
         return listImages;
     }
+
+
 
     public static ArrayList<FileItem> groupListAllVideos(ArrayList<FileItem> listAllFiles) {
         if (listAllFiles == null) {

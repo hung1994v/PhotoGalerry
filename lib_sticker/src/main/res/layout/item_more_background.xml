@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="@dimen/margin_xsmall_size">
+    android:orientation="vertical">
+
+
     <bsoft.healthy.tracker.menstrual.lib_sticker.ui.CustomRoundImage
-        android:id="@+id/iv_background_editor"
-        android:layout_width="@dimen/icon_size_xstand"
-        android:layout_height="@dimen/icon_size_xstand"
-        android:layout_centerInParent="true" />
-</RelativeLayout>
+        android:id="@+id/imgPatternText1"
+        android:layout_width="@dimen/icon_size_standard"
+        android:layout_height="@dimen/icon_size_standard"
+        android:layout_margin="@dimen/xx_small"
+        app:riv_corner_radius="7dp" />
+
+
+    <bsoft.healthy.tracker.menstrual.lib_sticker.ui.CustomRoundImage
+        android:id="@+id/imgPatternText2"
+        android:layout_width="@dimen/icon_size_standard"
+        android:layout_height="@dimen/icon_size_standard"
+        android:layout_margin="@dimen/xx_small"
+        app:riv_corner_radius="7dp" />
+
+
+</LinearLayout>

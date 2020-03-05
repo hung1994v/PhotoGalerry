@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.photo.gallery.models.FileItem;
+import com.photo.gallery.utils.Flog;
 import com.photo.gallery.utils.GalleryUtil;
 
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ public class GroupFilesTask extends AsyncTask<ArrayList<FileItem>, Void, Void> {
     private HashMap<String, ArrayList<FileItem>> listFolders = null;
     private ArrayList<FileItem> listImgs = null, listVideos = null;
     private Map<String, ArrayList<FileItem>> listImgSections = null, listVideoSections = null,
+            listVideoSectionsByMonth = null,
+            listImgSectionsByMonth,
             listFileSections = null;
 
     public GroupFilesTask(Context context) {
@@ -29,9 +32,10 @@ public class GroupFilesTask extends AsyncTask<ArrayList<FileItem>, Void, Void> {
         listFolders = GalleryUtil.groupListAllAlbums(listAllFiles);
         listImgs = GalleryUtil.groupListAllImages(listAllFiles);
         listVideos = GalleryUtil.groupListAllVideos(listAllFiles);
-
+        listImgSectionsByMonth = GalleryUtil.groupListSectionByMonth(listImgs);
         listImgSections = GalleryUtil.groupListSectionByDate(listImgs);
-        listVideoSections = GalleryUtil.groupListSectionByMonth(listImgs);
+        listVideoSections = GalleryUtil.groupListSectionByDate(listVideos);
+        listVideoSectionsByMonth = GalleryUtil.groupListSectionByMonth(listVideos);
         listFileSections = GalleryUtil.groupListSectionByDate(listAllFiles);
         return null;
     }
@@ -40,8 +44,10 @@ public class GroupFilesTask extends AsyncTask<ArrayList<FileItem>, Void, Void> {
     protected void onPostExecute(Void aVoid) {
         if (listener != null) {
             listener.onGroupFilesFinished(listImgs, listVideos, listFolders, listImgSections,
-                    listVideoSections, listFileSections);
+                    listVideoSections,listVideoSectionsByMonth,listImgSectionsByMonth, listFileSections);
         }
+
+
     }
 
     public GroupFilesTask setListener(OnGroupFilesListener groupFoldersListener) {
@@ -54,6 +60,9 @@ public class GroupFilesTask extends AsyncTask<ArrayList<FileItem>, Void, Void> {
                                   HashMap<String, ArrayList<FileItem>> listFolders,
                                   Map<String, ArrayList<FileItem>> listImgSections,
                                   Map<String, ArrayList<FileItem>> listVideoSections,
-                                  Map<String, ArrayList<FileItem>> listFileSections);
+                                  Map<String, ArrayList<FileItem>> listVideoSectionsByMonth,
+                                  Map<String, ArrayList<FileItem>> listImgSectionsByMonth,
+                                  Map<String, ArrayList<FileItem>> listFileSections
+                                  );
     }
 }

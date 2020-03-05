@@ -19,7 +19,11 @@
 
         <activity android:name=".activities.MainActivity"
             android:screenOrientation="portrait"
-            ></activity>
+            />
+        <activity
+            android:name="com.photo.splashfunphoto.EditPhotoActivity"
+            android:screenOrientation="portrait"
+            />
 
         <meta-data
             android:name="android.max_aspect"
@@ -48,21 +52,6 @@
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
         </intent-filter>
-        </activity>
-        <activity
-            android:name=".activities.EditPhotoActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <data android:scheme="file" />
-                <data android:scheme="content" />
-                <data android:mimeType="image/*" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-            </intent-filter>
         </activity>
 
         <meta-data

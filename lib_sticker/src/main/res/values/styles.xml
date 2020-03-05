@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="GeneralTextView">
         <item name="android:layout_width">wrap_content</item>
@@ -11,7 +11,7 @@
         <item name="android:layout_width">@dimen/icon_size_standard</item>
         <item name="android:layout_height">@dimen/icon_size_standard</item>
         <item name="android:scaleType">fitXY</item>
-        <item name="android:padding">@dimen/margin_small_size</item>
+        <item name="android:padding">@dimen/small</item>
         <item name="android:background">?selectableItemBackgroundBorderless</item>
         <item name="android:tint">@android:color/white</item>
     </style>
@@ -19,5 +19,11 @@
     <style name="MyDiscreteSeekBar">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="MySeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressBackgroundTint" tools:targetApi="lollipop">#ddd</item>
+        <item name="android:progressTint" tools:targetApi="lollipop">@color/colorAccent</item>
+        <item name="android:thumbTint" tools:targetApi="lollipop">@color/colorAccent</item>
     </style>
 </resources>
