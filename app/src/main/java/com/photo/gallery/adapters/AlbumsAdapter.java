@@ -78,7 +78,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<AlbumsAdapter.MyViewHold
         if (position == 0) {
             return ITEM_VIEW_TYPE;
         } else {
-            if (position % 5 == 0) {
+            if (position % 8 == 0) {
                 return NATIVE_AD_VIEW_TYPE;
             } else {
                 return ITEM_VIEW_TYPE;

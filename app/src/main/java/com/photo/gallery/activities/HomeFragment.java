@@ -14,16 +14,19 @@ import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.bsoft.core.AdmobFull;
 import com.bsoft.core.AdmobFullHelper;
 
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuItemCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.appcompat.app.AlertDialog;
 
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.Html;
@@ -42,6 +45,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.internal.Constants;
 import com.photo.gallery.R;
 import com.photo.gallery.adapters.MyViewPagerAdapter;
 import com.photo.gallery.callback.OnDialogEventListener;
@@ -59,6 +63,7 @@ import com.photo.gallery.fragments.SelectAlbumFragment;
 import com.photo.gallery.fragments.SettingFragment;
 import com.photo.gallery.fragments.VideoFragment;
 import com.photo.gallery.fragments.VideoViewerFragment;
+import com.photo.gallery.listener.VideoFavoriteRemoveCallback;
 import com.photo.gallery.models.AlbumItem;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.taskes.GroupFilesTask;
@@ -90,6 +95,7 @@ import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_PHOTO;
 import static com.photo.gallery.adapters.MyViewPagerAdapter.TAB_VIDEO;
 import static com.photo.gallery.utils.ConstValue.ALBUM_NAME;
 import static com.photo.gallery.utils.ConstValue.COLUM_GIRD_NUMBER;
+import static com.photo.gallery.utils.ConstValue.DEFAULT_OPEN;
 import static com.photo.gallery.utils.ConstValue.DELETE;
 import static com.photo.gallery.utils.ConstValue.DETAILS;
 import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
@@ -734,6 +740,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
 
+
     private void intViewpage() {
 
 //        hideDialog();
@@ -772,7 +779,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
                                     @Override
                                     public boolean onQueryTextChange(String newText) {
-                                        queryText(newText, TAB_PHOTO);
+                                        if(!photoFragment.getLongClickEvent()){
+                                            queryText(newText, TAB_PHOTO);
+                                        }
+
                                         return false;
                                     }
                                 });
@@ -848,7 +858,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
                                     @Override
                                     public boolean onQueryTextChange(String newText) {
-                                        queryText(newText, TAB_ALBUM);
+                                        if(!videoFragment.isLongClickedEvent()){
+                                            queryText(newText, TAB_ALBUM);
+                                        }
+
                                         return false;
                                     }
                                 });
@@ -891,7 +904,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
                                     @Override
                                     public boolean onQueryTextChange(String newText) {
-                                        queryText(newText, TAB_VIDEO);
+                                        if(!albumsFragment.isLongClickedEvent()){
+                                            queryText(newText, TAB_VIDEO);
+                                        }
+
                                         return false;
                                     }
                                 });
@@ -1028,6 +1044,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             ((VideoFragment) fragment).setLongClickedEvent(false);
             ((VideoFragment) fragment).unselectAll();
         }
+        SearchViewClose();
     }
 
     private void intToolbarAlbum() {
@@ -1084,16 +1101,13 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
     }
 
     public void SearchViewClose() {
+        Flog.d("xxxxxxxxxxxxxxx","SearchViewClose");
         if (searchView == null)
             return;
         if (!searchView.isIconified()) {
             searchView.onActionViewCollapsed();
             binding.toolbar.collapseActionView();
-//            KeyBoardHelper.hideKeyBoard(this);
         }
-//        if(searchView!=null && searchView.isIconified()){
-//                searchView.onActionViewCollapsed();
-//        }
     }
 
     private void queryText(String newText, int tabPhoto) {
@@ -1125,9 +1139,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
 
     @Override
     public void onItemInPhotoClicked(FileItem file, int numOfSelected) {
+        KeyboardUtil.hideKeyboard(mContext,searchView);
         handleItemClicked(file, numOfSelected);
     }
-
 
 
     private void handleItemClicked(FileItem file, int numOfSelected) {
@@ -1152,18 +1166,16 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             return;
         }
         mLastClickTime = SystemClock.elapsedRealtime();
-
-//        handler.removeCallbacksAndMessages(null);
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-
-                photoViewerFrag = PhotoViewerFragment.newInstance(file).setListener(HomeFragment.this);
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("FILE_ITEM",file);
+                photoViewerFrag = PhotoViewerFragment.newInstance(bundle).setListener(HomeFragment.this);
                 addFragment(photoViewerFrag, true);
                 PhotoViewerFragment photoViewerFragment = (PhotoViewerFragment) photoViewerFrag;
                 photoViewerFragment.clearLightStatusBar(getActivity());
-//            }
-//        }, 350);
+        if(System.currentTimeMillis()%2 ==0){
+            AdmobFull.show();
+        }
+
 
 
     }
@@ -1173,7 +1185,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (album == null) {
             return;
         }
-
+        KeyboardUtil.hideKeyboard(mContext,searchView);
         intToolbarAlbum();
 
         setTextNumOfSelected(1);
@@ -1197,9 +1209,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (isToolbarVideoShow) {
             closeToolbarVideo();
         }
+
     }
 
     public void closeToolbarPhoto() {
+        Flog.d("xxxxxxxxxxxxxxx","closeToolbarPhoto");
         isToolbarShow = false;
         Fragment fragment = getTab(TAB_PHOTO);
         if (fragment instanceof PhotoFragment) {
@@ -1208,6 +1222,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             ((PhotoFragment) fragment).setLongClickedEvent(false);
             ((PhotoFragment) fragment).unselectAll();
         }
+            SearchViewClose();
     }
 
     public void closeToolbarAlbum() {
@@ -1219,6 +1234,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
             ((AlbumsFragment) fragment).setLongClickedEvent(false);
             ((AlbumsFragment) fragment).unselectAll();
         }
+        SearchViewClose();
     }
 
     private void intToolbarPhoto() {
@@ -1303,8 +1319,10 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (file == null) {
             return;
         }
-        intToolbarPhoto();
-        setTextNumOfSelected(1);
+        KeyboardUtil.hideKeyboard(mContext,searchView);
+            intToolbarPhoto();
+            setTextNumOfSelected(1);
+
 //        Utils.scaleView(tabLayout, 1, 0);
 
 
@@ -1344,9 +1362,9 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                         keyFolderClick = key;
 //            }
 //        }, 350);
+        AdmobFull.show();
 
     }
-    private String keyFolderClick = null;
 
     @Override
     public void onItemAlbumLongClicked(AlbumItem album) {
@@ -1398,7 +1416,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         // set dialog message
         alertDialogBuilder
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.ok),
+                .setPositiveButton(getString(android.R.string.ok),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // get user input and set it to result
@@ -1447,7 +1465,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                                 KeyboardUtil.hideKeyboard(mContext, userInput);
                             }
                         })
-                .setNegativeButton(getString(R.string.cancel),
+                .setNegativeButton(getString(android.R.string.cancel),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 KeyboardUtil.hideKeyboard(mContext, userInput);
@@ -1906,6 +1924,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (file == null) {
             return;
         }
+        KeyboardUtil.hideKeyboard(mContext,searchView);
         intToolbarVideo();
         setTextNumOfSelected(1);
     }
@@ -1925,6 +1944,11 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         if (!isSearchViewClose()) {
             SearchViewClose();
         }
+
+        if (SystemClock.elapsedRealtime() - mLastClickTime < ConstValue.TIME_THRESHOLD_BETWEEN_TWO_CLICKS) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
                 fileItemVideo = file;
                 startActivityForResult(new Intent(mContext, ExoPlayerActivity.class)
                                 .putParcelableArrayListExtra(EXTRA_LIST_ALL_FILES, listAllVideos)
@@ -1934,6 +1958,7 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                                 .putExtra(VIDEO_OPEN_WITH, false)
                         , KEY_VIDEO_EXO);
 
+
     }
 
     @Override
@@ -1941,29 +1966,31 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
         super.onStop();
     }
 
+    private String keyFolderClick = null;
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == KEY_VIDEO_EXO) {
             int action = data.getIntExtra(PLAY_VIDEO, 0);
-            Flog.d("FAVORITE","1111111");
 
             switch (action) {
                 case REFRESH:
                     refreshGallery();
                     if(filesAlbumFrag!=null){
-                        ArrayList<FileItem> items = mapAllFolders.get(keyFolderClick);
-                        Flog.d("REFRESH: ", "nameFolderClick: " + items);
-                        ((FilesAlbumFragment) filesAlbumFrag).refreshList(items);
+                        ArrayList<FileItem> items = GalleryUtil.groupListAllAlbums(listAllFiles).get(keyFolderClick);
+                        (filesAlbumFrag).refreshList(items);
                     }
-//                    getFragmentManager().popBackStack();
                     break;
                 case FAVORITE:
+                    Flog.d("FAVORITE","333333");
                     refreshGallery();
-
                     if (favouriteFragment != null) {
                         ((FavouriteFragment) favouriteFragment).refreshList();
-                        Flog.d("FAVORITE","2222222");
+                    }
+                    if(filesAlbumFrag!=null){
+                        Flog.d("FAVORITE","444444");
+                        ArrayList<FileItem> items = GalleryUtil.groupListAllAlbums(listAllFiles).get(keyFolderClick);
+                        (filesAlbumFrag).refreshList(items);
                     }
                     break;
                 case DELETE:
@@ -1985,6 +2012,14 @@ public class HomeFragment extends BaseFragment implements GroupFilesTask.OnGroup
                     }
 
                     refreshGallery();
+                    if (favouriteFragment != null) {
+                        ((FavouriteFragment) favouriteFragment).refreshList();
+                    }
+                    if(filesAlbumFrag!=null){
+                        Flog.d("FAVORITE","444444");
+                        ArrayList<FileItem> items = GalleryUtil.groupListAllAlbums(listAllFiles).get(keyFolderClick);
+                        (filesAlbumFrag).refreshList(items);
+                    }
                     break;
             }
         }

@@ -115,11 +115,21 @@ public class DbUtils {
 
     public static boolean deleteFavourite(FileItem fileItem) {
         ArrayList<FileItem> oldList = DbUtils.parseFavourites();
-        Flog.d(TAG, "2size="+oldList.size());
-        boolean ok = oldList.remove(fileItem);
-        Flog.d(TAG, "2removed "+ok+"_size="+oldList.get(0).name);
-        DbUtils.saveFavourites(oldList);
-        return ok;
+        if(oldList.size()<1 && fileItem!=null){
+            return false;
+        }else {
+            boolean ok = false ;
+            for(FileItem fileItem1: oldList){
+                if(fileItem1.equals(fileItem)){
+                   ok =  oldList.remove(fileItem1);
+                    Flog.d(TAG, "2size="+oldList.size());
+                   break;
+                }
+            }
+            DbUtils.saveFavourites(oldList);
+            return ok;
+        }
+
     }
 
 

@@ -14,12 +14,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
+import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.fragments.AlbumsFragment;
 import com.photo.gallery.fragments.PhotoFragment;
 import com.photo.gallery.fragments.VideoFragment;
+import com.photo.gallery.fragments.VideoViewerFragment;
 import com.photo.gallery.models.AlbumItem;
 import com.photo.gallery.models.FileItem;
 import com.photo.gallery.utils.ConstValue;
+import com.photo.gallery.utils.Flog;
 
 public class MyViewPagerAdapter extends FragmentPagerAdapter implements PhotoFragment.OnPhotoListener, AlbumsFragment.OnAlbumsListener, VideoFragment.OnVideoListener {
     static final int TOTAL_TAB = 3;

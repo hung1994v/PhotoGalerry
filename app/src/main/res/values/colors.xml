@@ -23,6 +23,8 @@
 
     <array name="color_app_picker">
 
+        <item>#ffffff</item>
+        <item>#000000</item>
         <item>#6438b4</item>
         <item>#FF5252</item>
         <item>#FF1744</item>
@@ -69,7 +71,7 @@
 
         <item>#607D8B</item>
         <item>#263238</item>
-        <item>#000000</item>
+
     </array>
 </resources>
 

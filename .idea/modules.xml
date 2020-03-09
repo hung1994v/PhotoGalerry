@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/PhotoGalerry.iml" filepath="$PROJECT_DIR$/PhotoGalerry.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/lib_filter/lib_filter.iml" filepath="$PROJECT_DIR$/lib_filter/lib_filter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/photo.iml" filepath="$PROJECT_DIR$/photo.iml" />
       <module fileurl="file://$PROJECT_DIR$/simplecropview/simplecropview.iml" filepath="$PROJECT_DIR$/simplecropview/simplecropview.iml" />
     </modules>
   </component>

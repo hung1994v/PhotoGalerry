@@ -37,8 +37,6 @@
     <string name="orientation">Orientation</string>
     <string name="path">Path</string>
     <string name="duration">Duration</string>
-    <string name="cancel">Cancel</string>
-    <string name="ok">OK</string>
     <string name="unsuccessfully">unsuccessfully</string>
     <string name="successfully">successfully</string>
     <string name="confirm_delete_dialog">Are you sure you want to permanently delete file(s)?</string>

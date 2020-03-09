@@ -109,7 +109,6 @@ public class SplashActivity extends AppCompatActivity implements PremissionFragm
 
 
     private void loadFromGallery() {
-        Flog.d("AAAAAAAAAAAA", "444444");
 
         if (isGettingData) {
             return;
@@ -190,7 +189,6 @@ public class SplashActivity extends AppCompatActivity implements PremissionFragm
                     intent.putParcelableArrayListExtra(ConstValue.EXTRA_LIST_ALL_FILES, listAllFiles);
                     intent.putExtra(SPLASH_INTENT, true);
                     startActivity(intent);
-                    Flog.d("AAAAAAAAAAAA", "5555555");
                     //Let's Finish Splash Activity since we don't want to open this when user press back button.
                     finish();
                 } catch (Exception ignored) {

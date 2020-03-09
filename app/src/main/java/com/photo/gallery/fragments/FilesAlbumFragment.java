@@ -22,10 +22,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bsoft.core.AdmobAdaptiveBanner;
+import com.bumptech.glide.util.Util;
 import com.photo.gallery.R;
 import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.adapters.FileAlbumAdapter;
@@ -37,6 +40,7 @@ import com.photo.gallery.utils.ConstValue;
 import com.photo.gallery.utils.DbUtils;
 import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
+import com.photo.gallery.utils.KeyboardUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -91,10 +95,12 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getData();
-        initBannerAdmob();
+        initBannerAdmob(view);
         initViews();
         setValues();
     }
+
+
 
     private void getData() {
         if(getArguments() != null){
@@ -110,11 +116,16 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     }
 
 
-    private void initBannerAdmob() {
-//        AdmobBannerHelper.init(mContext, (ViewGroup) getView().findViewById(R.id.admob_banner))
-//                .setAdUnitId(getString(R.string.smart_banner_ad_id))
-//                .setAdSize(AdSize.SMART_BANNER)
-//                .loadAd();
+    private void initBannerAdmob(View view) {
+        FrameLayout frameLayout = view.findViewById(R.id.admob_banner);
+        if(mListFilesInAlbum.size()<9){
+            frameLayout.setVisibility(View.VISIBLE);
+            AdmobAdaptiveBanner.init(requireActivity(), frameLayout )
+                    .setAdUnitId(getString(R.string.admob_banner_ad))
+                    .loadAd();
+        }else {
+            frameLayout.setVisibility(View.GONE);
+        }
     }
 
     public boolean isSearchViewClose() {
@@ -126,6 +137,10 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
 
     public void SearchViewClose() {
         if (!searchView.isIconified()) {
+            for (FileItem fileItem : listSearch) {
+               fileItem.isSelected = false;
+            }
+            Flog.d("AAAAAAAA","222222222");
             searchView.onActionViewCollapsed();
             binding.toolbar.collapseActionView();
 //            KeyBoardHelper.hideKeyBoard(this);
@@ -209,12 +224,12 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     }
 
     private void queryText(String newText) {
+        Flog.d("AAAAAAAA","111111111");
         if (mListFilesInAlbum != null) {
             mListFilesInAlbum.clear();
         }
         for (FileItem fileItem : listSearch) {
             if (fileItem.name.toLowerCase().contains(newText.toLowerCase())) {
-
                 mListFilesInAlbum.add(fileItem);
             }
         }
@@ -334,11 +349,21 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
     }
 
     public void updateUI(ArrayList<FileItem> listFiles) {
+        if(!isSearchViewClose()){
+            SearchViewClose();
+        }
+
         showDialog();
         FileAlbumAdapter.allSelected = false;
         FileAlbumAdapter.unAllSelected = true;
 
         mListFilesInAlbum = listFiles;
+        if(listSearch!=null){
+            listSearch.clear();
+            listSearch.addAll(listFiles);
+        }
+
+
 
         if (mListFilesInAlbum == null) {
             return;
@@ -891,6 +916,7 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         binding.toolbarHideFilesEdit.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                KeyboardUtil.hideKeyboard(mContext,searchView);
                 switch (item.getItemId()) {
                     case R.id.share_btn:
                         actionShareFiles();
@@ -941,6 +967,7 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         binding.toolbar.setVisibility(View.VISIBLE);
         setLongClickedEvent(false);
         unselectAll();
+        SearchViewClose();
 
     }
 
@@ -965,7 +992,6 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
 
     @Override
     public void onItemInAlbumClicked(int position, FileItem file) {
-        Flog.d(TAG, "onItemInAlbumClicked=" + file.name);
         if (isLongClickedEvent) {
             handleItemAlbumClicked(position, file);
         } else {
@@ -980,7 +1006,6 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
 
 
     private void openFileViewer(FileItem file) {
-        Flog.d(TAG, "openFileFavouriteViewer=" + file);
         listener.openFileViewer(file);
         if(!isSearchViewClose()){
             SearchViewClose();
@@ -995,8 +1020,13 @@ public class FilesAlbumFragment extends BaseFragment implements View.OnClickList
         isLongClickedEvent = longClickedEvent;
     }
 
-    public void refreshList(ArrayList<FileItem> fileItems) {
-        mAdapter.updateView(fileItems);
+    public void refreshList(ArrayList<FileItem> items) {
+        if(listSearch!=null){
+            listSearch.clear();
+            listSearch.addAll(items);
+        }
+        mAdapter = new FileAlbumAdapter(mContext, items).setListener(this);
+        mRecyclerview.setAdapter(mAdapter);
     }
 
 

@@ -68,7 +68,7 @@ public class FileAlbumAdapter extends RecyclerView.Adapter<FileAlbumAdapter.MyVi
         if (!PreloadNativeAdsList.getInstance().getAll().isEmpty()) {
             while (positionAds < list.size()) {
                 list.add(positionAds, new FileItem( true));
-                positionAds += 10;
+                positionAds += 19;
             }
         }
 

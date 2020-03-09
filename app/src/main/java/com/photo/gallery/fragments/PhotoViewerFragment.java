@@ -79,10 +79,10 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
     private ProgressDialog progressDialog;
     private BottomSheetDialog mBottomSheetDialog;
 
-    public static PhotoViewerFragment newInstance(FileItem file) {
+    public static PhotoViewerFragment newInstance(Bundle bundle) {
 
         PhotoViewerFragment fragment = new PhotoViewerFragment();
-        fragment.mFileItem = file;
+        fragment.setArguments(bundle);
         return fragment;
     }
 
@@ -407,7 +407,7 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
 
 
     private void initViews() {
-
+        getData();
         View viewParent = getView();
         if (viewParent == null) {
             return;
@@ -459,6 +459,11 @@ public class PhotoViewerFragment extends BaseFragment implements View.OnClickLis
         }
     }
 
+    private void getData() {
+        if(getArguments()!=null){
+         mFileItem = getArguments().getParcelable("FILE_ITEM");
+        }
+    }
 
 
     private boolean checkFileFavorited1(FileItem fileItem) {

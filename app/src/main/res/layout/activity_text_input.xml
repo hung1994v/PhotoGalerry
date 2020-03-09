@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:text="@string/ok"
+            android:text="@android:string/ok"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:textColor="@android:color/black"
             android:textSize="@dimen/font_size_large" />
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_toLeftOf="@id/line_separate"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:text="@string/cancel"
+            android:text="@android:string/cancel"
             android:textColor="@android:color/black"
             android:textSize="@dimen/font_size_large" />
     </RelativeLayout>

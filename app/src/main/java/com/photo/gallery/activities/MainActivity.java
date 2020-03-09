@@ -71,14 +71,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        Flog.d("xxxxxxxxxxxxxxx","onBackPressed");
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.root_view);
         if (fragment instanceof PremissionFragment) {
             finish();
         } else if (fragment instanceof HomeFragment) {
-            if (!((HomeFragment) fragment).isSearchViewClose()) {
-                ((HomeFragment) fragment).SearchViewClose();
-            } else if (((HomeFragment) fragment).getToolbarShow()) {
+            if (((HomeFragment) fragment).getToolbarShow()) {
                 ((HomeFragment) fragment).closeToolbar();
+            } else if (!((HomeFragment) fragment).isSearchViewClose()) {
+                ((HomeFragment) fragment).SearchViewClose();
             } else {
                 if (bRateApp.show()) {
                     AdmobFull.show();
@@ -95,8 +96,14 @@ public class MainActivity extends AppCompatActivity {
         } else if (fragment instanceof FilesAlbumFragment) {
             if (!((FilesAlbumFragment) fragment).isSearchViewClose()) {
                 ((FilesAlbumFragment) fragment).SearchViewClose();
+                if (((FilesAlbumFragment) fragment).getToolbarShow()) {
+                    ((FilesAlbumFragment) fragment).closeToolbar();
+                }
             } else if (((FilesAlbumFragment) fragment).getToolbarShow()) {
                 ((FilesAlbumFragment) fragment).closeToolbar();
+                if (!((FilesAlbumFragment) fragment).isSearchViewClose()) {
+                    ((FilesAlbumFragment) fragment).SearchViewClose();
+                }
             } else
                 getSupportFragmentManager().popBackStack();
         } else if (getSupportFragmentManager().getBackStackEntryCount() > 0) {

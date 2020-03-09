@@ -306,7 +306,7 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
         // set dialog message
         alertDialogBuilder
                 .setCancelable(false)
-                .setPositiveButton(mContext.getString(R.string.ok),
+                .setPositiveButton(mContext.getString(android.R.string.ok),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // get user input and set it to result
@@ -328,7 +328,7 @@ public class SelectAlbumFragment extends BaseFragment implements AlbumsAdapter.O
                                 dialog.cancel();
                             }
                         })
-                .setNegativeButton(mContext.getString(R.string.cancel),
+                .setNegativeButton(mContext.getString(android.R.string.cancel),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 KeyboardUtil.hideKeyboard(mContext, userInput);

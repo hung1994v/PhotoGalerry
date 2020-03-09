@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.callback.OnDialogEventListener;
 import com.photo.gallery.R;
 import com.photo.gallery.adapters.MySection;
@@ -60,7 +61,6 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     private RecyclerView mRecyclerView = null;
     private FloatingActionButton mFloatingActionButton = null;
     private ArrayList<FileItem> mListAllImgs = new ArrayList<>();
-    private ArrayList<FileItem> listSearch = new ArrayList<>();
     private Map<String, ArrayList<FileItem>> mListAllImgSections = new HashMap<>();
     private Map<String, ArrayList<FileItem>> mListAllsearch = new HashMap<>();
     private OnPhotoListener listener = null;
@@ -101,7 +101,6 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
     private void getData() {
         if(getArguments()!=null){
             this.mListAllImgs = getArguments().getParcelable(EXTRA_LIST_ALL_FILES);
-            this.listSearch = getArguments().getParcelable(EXTRA_LIST_ALL_FILES);
             this.mListAllImgSections = (Map<String, ArrayList<FileItem>>) getArguments().getSerializable(EXTRA_LIST_ALL_MAP);
         }
     }
@@ -209,6 +208,10 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
 
     public void setLongClickedEvent(boolean longClickedEvent) {
         isLongClickedEvent = longClickedEvent;
+    }
+
+    public boolean getLongClickEvent(){
+        return isLongClickedEvent;
     }
 
 
@@ -484,7 +487,7 @@ public class PhotoFragment extends BaseFragment implements MySection.OnMySetionL
             return;
         }
 
-        listSearch = listAllImgs;
+
         mListAllImgs = listAllImgs;
         mListAllImgSections = listAllImgSections;
         if (mListAllImgs == null || mListAllImgSections == null) {
