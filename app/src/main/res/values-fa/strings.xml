@@ -1,0 +1,127 @@
+<resources>
+	<string name="app_name">آلبوم عکس</string>
+	<string name="load_gallery_failed">نمی توانید پرونده ها را از گالری خود بارگیری کنید.</string>
+	<string name="security">امنیت</string>
+	<string name="set_as_default_library">به عنوان کتابخانه پیش فرض تنظیم شود</string>
+	<string name="feedback">بازخورد</string>
+	<string name="version">نسخه</string>
+	<string name="search">جستجو کردن...</string>
+	<string name="no_file_found">هیچ پرونده ای یافت نشد!</string>
+	<string name="please_select_media_for">لطفاً رسانه را انتخاب کنید</string>
+	<string name="delete">حذف</string>
+	<string name="share">اشتراک گذاری</string>
+	<string name="copy">کپی 🀄</string>
+	<string name="move">حرکت</string>
+	<string name="select_all">انتخاب همه</string>
+	<string name="unselect_all">همه را انتخاب کنید</string>
+	<string name="loading">بارگذاری</string>
+	<string name="selecting">انتخاب</string>
+	<string name="details">جزئیات</string>
+	<string name="edit">ویرایش کنید</string>
+	<string name="set_picture_as">قرار دادن تصویر به عنوان</string>
+	<string name="open_with">بازکردن با</string>
+	<string name="rename">تغییر نام دهید</string>
+	<string name="media_info">اطلاعات رسانه ای</string>
+	<string name="filename">نام فایل</string>
+	<string name="last_modified">آخرین اصلاح شده</string>
+	<string name="size">اندازه</string>
+	<string name="filetype">نوع فایل</string>
+	<string name="width">عرض</string>
+	<string name="height">قد</string>
+	<string name="orientation">گرایش</string>
+	<string name="path">مسیر</string>
+	<string name="duration">مدت زمان</string>
+	<string name="unsuccessfully">ناموفق</string>
+	<string name="successfully">با موفقیت</string>
+	<string name="confirm_delete_dialog">آیا مطمئن هستید که می خواهید پرونده (های) را به طور دائم حذف کنید؟</string>
+	<string name="confirm_delete_album_dialog">آیا مطمئن هستید که می خواهید این آلبوم را به طور دائم حذف کنید؟</string>
+	<string name="select_album">آلبوم را انتخاب کنید</string>
+	<string name="no_album_found">هیچ آلبومی یافت نشد!</string>
+	<string name="enter_album_name">نام آلبوم را وارد کنید</string>
+	<string name="please_enter_name_of_album">لطفا نام آلبوم را وارد کنید!</string>
+	<string name="cannot_edit_photo">نمی توانید این عکس را ویرایش کنید!</string>
+	<string name="save_photo">ذخیره عکس</string>
+	<string name="confirm_save_to_storage_dialog">آیا مطمئن هستید که می خواهید در فضای داخلی ذخیره کنید؟</string>
+	<string name="clear">پاک کردن</string>
+	<string name="enter_text">متن را وارد کنید</string>
+	<string name="color_picker">انتخاب کننده رنگ</string>
+	<string name="favourite">مورد علاقه</string>
+	<string name="set_wallpaper">تنظیم پس زمینه</string>
+	<string name="photo_tittle">عکس</string>
+	<string name="video_tittle">فیلم</string>
+	<string name="folder">پوشه</string>
+	<string name="select_item">مورد را انتخاب کنید</string>
+	<string name="setting">تنظیمات</string>
+	<string name="day_view">نمای روز</string>
+	<string name="month_view">نمای ماه</string>
+	<string name="save">صرفه جویی</string>
+	<string name="fix">تصویر متناسب</string>
+	<string name="item">موارد</string>
+	<string name="video_not_found">ویدئو پیدا نشد</string>
+	<string name="play_video">پخش ویدئو</string>
+	<string name="creat_new_folder">پوشه جدید ایجاد کنید</string>
+	<string name="name_is_too_long">نام خیلی طولانی است</string>
+	<string name="file_name_empty">نام خالی نیست</string>
+	<string name="file_name_error">خطای نام پرونده</string>
+	<string name="file_name_error2">خطای نام پرونده ، لطفاً نام دیگری را انتخاب کنید</string>
+	<string name="file_name_exist">نام پرونده خارج می شود!</string>
+	<string name="add_folder_success">پوشه را با موفقیت اضافه کنید</string>
+	<string name="move_to_folder">انتقال به پوشه</string>
+	<string name="coppy_to_folder">در پوشه کپی کنید</string>
+	<string name="msg_need_write">برای استفاده از این ویژگی به این برنامه نیاز به خواندن ، نوشتن مجوز تنظیمات دارید ، لطفاً اجازه دهید ما به دستگاه شما دسترسی داشته باشیم.</string>
+	<string name="allow">اجازه</string>
+	<string name="rationale_read">برای کار صحیح این برنامه به مجوز دسترسی نیاز دارد</string>
+	<string name="needsaccess">دسترسی لازم را بنویسید</string>
+	<string name="needsaccesssummary">لطفا فهرست اصلی را انتخاب کنید</string>
+	<string name="needsaccesssummary1">برای دسترسی به نوشتن دسترسی به فعالیت</string>
+	<string name="open">باز کن</string>
+	<string name="skip">پرش</string>
+	<string name="copy_low_memory">حافظه را از بین ببرید ، لطفاً چند رم را پاک کنید</string>
+	<string name="set_as">تنظیم پس زمینه</string>
+	<string name="home_screen">صفحه اصلی</string>
+	<string name="lockscreen">صفحه قفل</string>
+	<string name="home_and_lock">صفحه نمایش و صفحه نمایش قفل</string>
+	<string name="set_wall">تنظیم پس زمینه</string>
+	<string name="set_wall_message">آیا می خواهید تصویر زمینه زنده تنظیم کنید ، تمام صفحه تصویر زمینه روی دستگاه حذف خواهد شد؟</string>
+	<string name="set_wall_message_fisrt">آیا می خواهید تصویر زمینه زنده تنظیم کنید؟</string>
+	<string name="set_image_message">آیا می خواهید این تصویر را در صفحه اصلی و صفحه قفل تنظیم کنید؟</string>
+	<string name="set_lockscreen_message">آیا می خواهید این تصویر را برای قفل صفحه تنظیم کنید؟</string>
+	<string name="set_homeScreen_message">آیا می خواهید این تصویر را در صفحه اصلی تنظیم کنید؟</string>
+	<string name="please_wait">لطفا صبر کنید</string>
+	<string name="set_wall_success">کاغذ دیواری را با موفقیت تنظیم کنید!</string>
+	<string name="store">ذخیره سازی</string>
+	<string name="please_set">لطفاً این برنامه را پیش فرض قرار دهید</string>
+	<string name="save_photo_success">ذخیره تصویر با موفقیت!</string>
+	<string name="resolution">وضوح</string>
+	<string name="text_cannot_blank">متن نمی تواند خالی باشد</string>
+	<string name="add">اضافه کردن</string>
+	<string name="brightness">روشنایی</string>
+	<string name="contrast">تضاد</string>
+	<string name="tone">تن</string>
+	<string name="warmth">گرما</string>
+	<string name="fade">محو شدن</string>
+	<string name="vignette">وینته</string>
+	<string name="hue">رنگ</string>
+	<string name="splash">چلپ چلوپ</string>
+	<string name="imgerror">تصاویر پشتیبانی نمی کنند!</string>
+	<string name="Please">لطفا صبر کنید!</string>
+	<string name="Confirm">تایید</string>
+	<string name="reset">تنظیم مجدد</string>
+	<string name="texture">بافت</string>
+	<string name="noise">سر و صدا</string>
+	<string name="adjust">تنظیم کنید</string>
+	<string name="crop">گندم</string>
+	<string name="left">ترک کرد</string>
+	<string name="right">درست</string>
+	<string name="horizon">افق</string>
+	<string name="vertical">عمودی</string>
+	<string name="edit_sticker">برچسب را ویرایش کنید</string>
+	<string name="type_something">چیزی بنویسید</string>
+	<string name="color">رنگ</string>
+	<string name="pattern">الگو</string>
+	<string name="padding">لایه گذاری</string>
+	<string name="opacity">کدورت</string>
+	<string name="tools">ابزار</string>
+	<string name="sticker">استیکر</string>
+	<string name="text">متن</string>
+</resources>

@@ -66,7 +66,7 @@ public class StickerFragment extends BaseFragment implements StickerAdapter.OnSt
     }
 
     private void initRecyclerView() {
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 5);
         mRSticker.setLayoutManager(layoutManager);
         StickerAdapter stickerAdapter = new StickerAdapter(getActivity(), mListIcon).setOnStickerListener(this);
         mRSticker.setAdapter(stickerAdapter);

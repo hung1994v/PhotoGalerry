@@ -35,7 +35,7 @@ public class RatioCropAdapter extends RecyclerView.Adapter<RatioCropAdapter.View
         mContext = context;
         mLisRatioCrop = list;
         mRecycler = recyclerView;
-//        heightDefaultItem = (int) mContext.getResources().getDimension(R.dimen._40sdp);
+//        heightDefaultItem = (int) mContext.getResources().getDimension(R.dimen._42sdp);
         indexPos = pos;
     }
 
@@ -91,21 +91,21 @@ public class RatioCropAdapter extends RecyclerView.Adapter<RatioCropAdapter.View
          float height = 0;
          float with = 0;
          if(mLisRatioCrop.get(position).getRatioW() > mLisRatioCrop.get(position).getRatioH()){
-             height =  mContext.getResources().getDimension(R.dimen._40sdp);
+             height =  mContext.getResources().getDimension(R.dimen._42sdp);
              with = (mLisRatioCrop.get(position).getRatioW() *height)/mLisRatioCrop.get(position).getRatioH() ;
          }else {
-             with =  mContext.getResources().getDimension(R.dimen._40sdp);
+             with =  mContext.getResources().getDimension(R.dimen._42sdp);
              height = (mLisRatioCrop.get(position).getRatioH() *with)/mLisRatioCrop.get(position).getRatioW() ;
          }
 
         if(mLisRatioCrop.get(position).getRatioW()  == Statics.FIT_IMAGE){
-            with =  mContext.getResources().getDimension(R.dimen._40sdp);
+            with =  mContext.getResources().getDimension(R.dimen._42sdp);
             height = (2*with)/1;
         }else if(mLisRatioCrop.get(position).getRatioW()  == Statics.CIRCLE){
-            height =  mContext.getResources().getDimension(R.dimen._40sdp);
-            with =  mContext.getResources().getDimension(R.dimen._40sdp);
+            height =  mContext.getResources().getDimension(R.dimen._42sdp);
+            with =  mContext.getResources().getDimension(R.dimen._42sdp);
         }else if(mLisRatioCrop.get(position).getRatioW()  == Statics.FREE_IMAGE){
-            with =  mContext.getResources().getDimension(R.dimen._40sdp);
+            with =  mContext.getResources().getDimension(R.dimen._42sdp);
             height = (3*with)/2;
         }
 

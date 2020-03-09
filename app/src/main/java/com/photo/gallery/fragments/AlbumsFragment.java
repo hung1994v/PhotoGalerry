@@ -4,11 +4,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -16,9 +20,14 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.bsoft.core.AdmobAdaptiveBanner;
+import com.google.android.gms.ads.AdView;
+import com.photo.gallery.BuildConfig;
 import com.photo.gallery.R;
+import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.adapters.AlbumsAdapter;
 import com.photo.gallery.callback.OnFileDialogEventListener;
 import com.photo.gallery.models.AlbumItem;
@@ -28,12 +37,15 @@ import com.photo.gallery.utils.DbUtils;
 import com.photo.gallery.utils.FileUtil;
 import com.photo.gallery.utils.Flog;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_FILES;
 import static com.photo.gallery.utils.ConstValue.EXTRA_LIST_ALL_MAP;
 
 /**
@@ -54,6 +66,8 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
     private boolean isLongClickedEvent = false;
     private HashMap<Integer, AlbumItem> listPositionChanged = new HashMap<>();
     private ProgressDialog progressDialog = null;
+    private FrameLayout frameLayout;
+    private HomeFragment homeFragment;
 
     public static AlbumsFragment newInstance(Bundle bundle) {
         AlbumsFragment fragment = new AlbumsFragment();
@@ -74,7 +88,10 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
         initDialog();
         initViews();
         initialize(mListFolders);
+
     }
+
+
 
     private void getData() {
         if(getArguments()!=null){
@@ -492,8 +509,11 @@ public class AlbumsFragment extends BaseFragment implements AlbumsAdapter.OnAlbu
             }
 
         }
-        Flog.d("AAAAAAAAAA3","size album: " + mListAlbums.size());
         mAdapter.notifyDataSetChanged();
+    }
+
+    public boolean isLongClickedEvent() {
+        return isLongClickedEvent;
     }
 
     public interface OnAlbumsListener {

@@ -573,7 +573,7 @@ public class FileUtils {
                 FileUtils.triggerDocumentTree(mainActivity);
             }
         });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Toast.makeText(mainActivity, R.string.skip, Toast.LENGTH_SHORT).show();

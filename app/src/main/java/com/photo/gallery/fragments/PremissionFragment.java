@@ -77,7 +77,10 @@ public class PremissionFragment extends BaseFragment implements EasyPermissions.
 
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
-        listener.onPermissionGranted();
+        if(listener!=null){
+            listener.onPermissionGranted();
+        }
+
         Flog.d("onPermissionsGranted","granted");
     }
 
@@ -95,7 +98,10 @@ public class PremissionFragment extends BaseFragment implements EasyPermissions.
             EasyPermissions.requestPermissions(this, getString(R.string.rationale_read),
                     GRANT_BTN, perm);
         }else {
-            listener.onPermissionGranted();
+            if(listener!=null){
+                listener.onPermissionGranted();
+            }
+
         }
     }
 

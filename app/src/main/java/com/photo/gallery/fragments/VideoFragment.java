@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.photo.gallery.activities.HomeFragment;
 import com.photo.gallery.callback.OnDialogEventListener;
 import com.photo.gallery.R;
 import com.photo.gallery.adapters.MySection;
@@ -57,6 +58,7 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
     public static VideoFragment newInstance(Bundle bundle) {
         VideoFragment fragment = new VideoFragment();
         fragment.setArguments(bundle);
+       
         return fragment;
     }
 
@@ -359,6 +361,10 @@ public class VideoFragment extends BaseFragment implements MySection.OnMySetionL
         Flog.d(TAG, "update total sections=" + sectionAdapter.getItemCount() + "_vs_" + cnt);
 
         sectionAdapter.notifyDataSetChanged();
+    }
+
+    public boolean isLongClickedEvent() {
+        return isLongClickedEvent;
     }
 
 

@@ -50,8 +50,6 @@ import com.photo.gallery.utils.GalleryUtil;
 import com.photo.gallery.utils.KeyboardUtil;
 import com.photo.gallery.utils.Utils;
 
-import org.jetbrains.annotations.Contract;
-
 import java.io.File;
 import java.util.ArrayList;
 
@@ -248,7 +246,6 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
         return false;
     }
 
-
     private FileItem getFileItem() {
         FileItem fileInstance = null;
         if(listAllFiles!=null){
@@ -314,7 +311,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
         // set dialog message
         alertDialogBuilder
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.ok),
+                .setPositiveButton(getString(android.R.string.ok),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // get user input and set it to result
@@ -362,7 +359,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
 
 
                                     } else {
-                                        isRefresh = true;
+                                        isRefresh = false;
                                         FileUtil.toastFailed(mContext, getString(R.string.rename));
                                     }
 
@@ -376,7 +373,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
                                 dialog.dismiss();
                             }
                         })
-                .setNegativeButton(getString(R.string.cancel),
+                .setNegativeButton(getString(android.R.string.cancel),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 KeyboardUtil.hideKeyboard(mContext, userInput);
@@ -655,7 +652,7 @@ public class ExoPlayerActivity extends AppCompatActivity implements ExoPlayerVie
                 @Override
                 public void onPlayerError(ExoPlaybackException error) {
                     super.onPlayerError(error);
-                    Toast.makeText(ExoPlayerActivity.this, "Cannot play this video 111", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ExoPlayerActivity.this, "Cannot play this video!", Toast.LENGTH_SHORT).show();
                     onBackPressed();
                 }
 

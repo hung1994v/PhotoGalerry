@@ -107,7 +107,7 @@ public class MySection extends StatelessSection {
 
             Glide.with(mContext)
                     .load(filePath)
-//                    .error(R.drawable.ic_no_image)
+                    .error(R.drawable.ic_no_image)
 //                .diskCacheStrategy(DiskCacheStrategy.NONE)
 //                .skipMemoryCache(false)
 //                .skipMemoryCache(false)  // old

@@ -115,7 +115,7 @@ public class EditPhotoActivity extends AppCompatActivity {
         }
     }
 
-    public static final int MAX_STICER = 7;
+    public static final int MAX_STICER = 5;
 
     private void loadAllLayout() {
         Map<String, List<String>> listMap = new HashMap<>();
@@ -164,27 +164,7 @@ public class EditPhotoActivity extends AppCompatActivity {
                 }
 
                 break;
-            case 6:
-                list.clear();
-                for (int i = 1; i <= 53; i++) {
-                    if(i < 10){
-                        list.add("sticker/6/0" + i + ".png");
-                    }else{
-                        list.add("sticker/6/" + i + ".png");
-                    }
-                }
-                break;
-            case 7:
-                list.clear();
-                for (int i = 1; i <= 33; i++) {
-                    if(i < 10){
-                        list.add("sticker/7/0" + i + ".png");
-                    }else{
-                        list.add("sticker/7/" + i + ".png");
-                    }
-                }
 
-                break;
 
 
         }
